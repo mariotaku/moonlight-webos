@@ -1,10 +1,8 @@
 #!/bin/sh
 
-set APP_META_DIR=$1
+APP_META_DIR=$1
 
-echo $1
-
-if [ -f $APP_META_DIR/appinfo.json ]; then
+if [ ! -f $APP_META_DIR/appinfo.json ]; then
   echo 'Application metadata is not present'
   exit 1
 fi

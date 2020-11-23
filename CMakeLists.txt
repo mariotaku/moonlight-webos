@@ -25,10 +25,6 @@ target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<C
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE Qt5::Core Qt5::Quick)
 
 set(APP_META_DIR "${CMAKE_SOURCE_DIR}/webos-metadata")
-# copy appinfo.json file to output folder
-if(NOT EXISTS "${APP_META_DIR}/appinfo.json")
-    MESSAGE(FATAL_ERROR "Application metadata is not present.")
-endif()
 
 add_custom_command(TARGET "${EXECUTABLE_NAME}" POST_BUILD
     COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${APP_META_DIR}
