@@ -4,7 +4,7 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 project(moonlight-webos LANGUAGES CXX)
 
 if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
-    message( FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
+    MESSAGE(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
 endif()
 
 set(Qt5_DIR "/opt/webos-sdk-x86_64/1.0.g/sysroots/armv7a-neon-webos-linux-gnueabi/usr/lib/cmake/Qt5")
@@ -26,21 +26,12 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE Qt5::Core Qt5::Quick)
 
 set(APP_META_DIR "${CMAKE_SOURCE_DIR}/webos-metadata")
 # copy appinfo.json file to output folder
-if(EXISTS "${APP_META_DIR}/appinfo.json")
-    file(COPY "${APP_META_DIR}/appinfo.json" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-else()
-    MESSAGE( "'appinfo.json' file was not found !!")
-endif()
-
-# copy icon.png file to output folder
-if(EXISTS "${APP_META_DIR}/icon.png")
-    file(COPY "${APP_META_DIR}/icon.png" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-else()
-    MESSAGE( "'icon.png' file was not found !!")
+if(NOT EXISTS "${APP_META_DIR}/appinfo.json")
+    MESSAGE(FATAL_ERROR "Application metadata is not present.")
 endif()
 
 add_custom_command(TARGET "${EXECUTABLE_NAME}" POST_BUILD
-    COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh
+    COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${APP_META_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Packaging into IPK file..."
 )
