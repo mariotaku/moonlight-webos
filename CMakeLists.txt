@@ -38,3 +38,9 @@ if(EXISTS "${APP_META_DIR}/icon.png")
 else()
     MESSAGE( "'icon.png' file was not found !!")
 endif()
+
+add_custom_command(TARGET "${EXECUTABLE_NAME}" POST_BUILD
+    COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Packaging into IPK file..."
+)
