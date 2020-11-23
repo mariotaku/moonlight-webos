@@ -24,7 +24,7 @@ add_executable(${EXECUTABLE_NAME} "src/main.cpp" "src/qml.qrc")
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE Qt5::Core Qt5::Quick)
 
-set(APP_META_DIR "${CMAKE_SOURCE_DIR}/meta-webos")
+set(APP_META_DIR "${CMAKE_SOURCE_DIR}/webos-metadata")
 # copy appinfo.json file to output folder
 if(EXISTS "${APP_META_DIR}/appinfo.json")
     file(COPY "${APP_META_DIR}/appinfo.json" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

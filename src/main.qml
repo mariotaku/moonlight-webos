@@ -27,7 +27,6 @@ WebOSWindow {
     appId: "com.limelight.webos"
     title: "Moonlight"
     color: "lightblue"
-    // displayAffinity: params["displayAffinity"]
 
     Text {
         id: mainText
@@ -42,29 +41,9 @@ WebOSWindow {
         pmLog.info("LAUNCH_PARAMS", {"params": launchParams})
     }
 
-    Service {
-        id: systemService
-        appId: "com.example.app.qml"
-
-        function getTime() {
-            call("luna://com.webos.service.systemservice","/clock/getTime","{}")
-        }
-
-        onResponse: {
-            var jsonObject = JSON.parse(payload);
-            pmLog.info("GETTIME", {"utc": jsonObject.utc});
-            mainText.text = "UTC : " + jsonObject.utc
-        }
-
-        onError: {
-            var jsonObject = JSON.parse(payload);
-            pmLog.error("GETTIME", {"error": jsonObject});
-        }
-    }
-
     MouseArea {
         anchors.fill: parent
-        onClicked: systemService.getTime()
+        onClicked: mainText.text = "I've been clicked!";
     }
 
     onWindowStateChanged: {
