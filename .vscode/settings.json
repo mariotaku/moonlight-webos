@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "qopenglwindow": "cpp",
+        "weboscorecompositor": "cpp",
+        "qguiapplication": "cpp"
+    }
+}
