@@ -17,7 +17,9 @@
 import QtQuick 2.4
 import WebOSServices 1.0
 import Eos.Window 0.1
+import Eos.Controls 0.1
 import PmLog 1.0
+import com.limelight.webos 1.0
 
 WebOSWindow {
     id: root
@@ -26,7 +28,13 @@ WebOSWindow {
     visible: true
     appId: "com.limelight.webos"
     title: "Moonlight"
-    color: "lightblue"
+
+    Header {
+        id: liveTvAppHeader
+        width: parent.width
+        headerText: "Channel"
+        subHeaderText: "Now | Cable | All"
+    }
 
     Text {
         id: mainText
@@ -54,7 +62,7 @@ WebOSWindow {
         id: pmLog
         context: "QMLApp"
     }
-    AVCodecChecker {
+    CodecChecker {
         id: codecChecker
     }
 }

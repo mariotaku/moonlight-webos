@@ -30,7 +30,7 @@ set_target_properties(moonlight_core PROPERTIES COMPILE_FLAGS "-Wno-missing-brac
 find_package(PkgConfig REQUIRED) 
 
 # these calls create special `PkgConfig::<MODULE>` variables
-pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
+pkg_check_modules(GST REQUIRED IMPORTED_TARGET gstreamer-1.0)
 
 # QMake is not yet included in SDK itself, that one we needed is located in build-webos/BUILD/sysroots/x86_64-linux
 set(OE_QMAKE_PATH_EXTERNAL_HOST_BINS "/opt/webos-sdk-x86_64/1.0.g/sysroots/x86_64-linux/usr/bin/qt5")
@@ -40,10 +40,11 @@ find_package(Qt5 COMPONENTS Core Quick REQUIRED)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/pkg_$ENV{ARCH}/")
 set(EXECUTABLE_NAME "moonlight")
 
-add_executable(${EXECUTABLE_NAME} "src/main.cpp" "src/avcodec-check.cpp" "src/qml.qrc")
+add_executable(${EXECUTABLE_NAME} "src/main.cpp" "src/codec-check.cpp" "src/qml.qrc")
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES AUTOMOC TRUE)
+target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${GST_INCLUDE_DIRS})
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-target_link_libraries(${EXECUTABLE_NAME} PRIVATE moonlight_core Qt5::Core Qt5::Quick ${AVCODEC_LIBRARIES})
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE moonlight_core Qt5::Core Qt5::Quick ${GST_LIBRARIES})
 
 set(APP_META_DIR "${CMAKE_SOURCE_DIR}/webos-metadata")
 
