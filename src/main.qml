@@ -43,7 +43,7 @@ WebOSWindow {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: mainText.text = "I've been clicked!";
+        onClicked: mainText.text = codecChecker.listSupportedCodecs();
     }
 
     onWindowStateChanged: {
@@ -53,5 +53,8 @@ WebOSWindow {
     PmLog {
         id: pmLog
         context: "QMLApp"
+    }
+    AVCodecChecker {
+        id: codecChecker
     }
 }
