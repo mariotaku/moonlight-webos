@@ -40,7 +40,7 @@ find_package(Qt5 COMPONENTS Core Quick REQUIRED)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/pkg_$ENV{ARCH}/")
 set(EXECUTABLE_NAME "moonlight")
 
-add_executable(${EXECUTABLE_NAME} "src/main.cpp" "src/codec-check.cpp" "src/qml.qrc")
+add_executable(${EXECUTABLE_NAME} "src/main.cpp" "src/codec-check.cpp" "qml/qml.qrc")
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES AUTOMOC TRUE)
 target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${GST_INCLUDE_DIRS})
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
@@ -48,8 +48,10 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE moonlight_core Qt5::Core Qt5::Q
 
 set(APP_META_DIR "${CMAKE_SOURCE_DIR}/webos-metadata")
 
-add_custom_command(TARGET "${EXECUTABLE_NAME}" POST_BUILD
-    COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${APP_META_DIR}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Packaging into IPK file..."
+add_custom_target("package" COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${APP_META_DIR}
+    DEPENDS ${EXECUTABLE_NAME}
+)
+
+add_custom_target("device-install" COMMAND ${CMAKE_SOURCE_DIR}/scripts/device-install.sh ${APP_META_DIR}
+    DEPENDS "package"
 )

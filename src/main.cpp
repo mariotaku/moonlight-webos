@@ -11,6 +11,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<CodecChecker>("com.limelight.webos", 1, 0, "CodecChecker");
 
     QQmlApplicationEngine engine;
+
+    engine.rootContext()->setContextProperty("initialView", "qrc:/ComputersView.qml");
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
