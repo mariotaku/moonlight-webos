@@ -11,7 +11,10 @@
             "target": "moonlight",
             "cwd": "${workspaceRoot}",
             "valuesFormatting": "parseText",
-            "gdbpath": "/media/developer/temp/gdbstatic",
+            "gdbpath": "/media/developer/apps/usr/palm/applications/com.limelight.webos/assets/temp/gdbstatic",
+            "pathSubstitutions": {
+                "${workspaceFolder}/src": "/media/developer/apps/usr/palm/applications/com.limelight.webos/src"
+            },
             "ssh": {
                 "host": "192.168.4.104",
                 "port": 9922,

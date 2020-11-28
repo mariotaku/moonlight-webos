@@ -20,7 +20,7 @@ StreamingController::StreamingController(QObject *parent)
     qDebug("Streaming Controller Created");
 
     QImage img;
-    img.load("/media/developer/apps/usr/palm/applications/com.limelight.webos/assets/shiva.jpg");
+    img.load("/media/developer/apps/usr/palm/applications/com.limelight.webos/assets/temp/shiva.jpg");
     QSize sz = img.size();
     qDebug("Image: w: %d, h: %d, pxfmt: %d", sz.width(), sz.height(), img.pixelFormat());
     _frame = (img);

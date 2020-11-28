@@ -30,9 +30,7 @@ fi
 
 rm -rf $PKG_DEST/$APP_META_DIR
 rm -rf $PKG_DEST/$ASSETS_DIR
-rm -rf $PKG_DEST/$SRC_DIR
 
 cp -r $APP_META_DIR $PKG_DEST/
 cp -r $ASSETS_DIR $PKG_DEST/
-cp -r $SRC_DIR $PKG_DEST/
 $WEBOS_CLI_TV/ares-package pkg_$ARCH
