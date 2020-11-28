@@ -159,6 +159,7 @@ void StreamingController::gstSetup()
 
     GstStateChangeReturn ret;
 
+    GstElement *source, *sink;
     /* Create the elements */
     source = gst_element_factory_make("videotestsrc", "source");
     sink = gst_element_factory_make("appsink", "sink");
@@ -202,7 +203,6 @@ void StreamingController::gstSetup()
 void StreamingController::gstDestroy()
 {
     /* Free resources */
-    // gst_object_unref(bus);
     gst_element_set_state(pipeline, GST_STATE_NULL);
     gst_object_unref(pipeline);
 }
@@ -216,10 +216,8 @@ if (!_surface || !_surface->isActive())
     _surface->present(_frame);
 }
 
-GstFlowReturn StreamingController::gstHandlePreroll(GstAppSink *sink)
+GstFlowReturn StreamingController::gstHandlePreroll(GstSample *preroll)
 {
-    GstSample *preroll;
-    preroll = gst_app_sink_pull_preroll(sink);
     if (preroll == NULL)
     {
         return GST_FLOW_EOS;

@@ -38,12 +38,17 @@ private:
 
     QVideoSurfaceFormat formatForCaps(const GstCaps *caps, int *bytesPerLine);
 
-    GstFlowReturn gstHandlePreroll(GstAppSink *sink);
+    GstFlowReturn gstHandlePreroll(GstSample *preroll);
     GstFlowReturn gstHandleSample(GstSample *sample);
 
     static GstFlowReturn gst_cb_new_preroll(GstAppSink *sink, gpointer *data)
     {
-        return reinterpret_cast<StreamingController *>(data)->gstHandlePreroll(sink);
+        GstSample *preroll;
+        /* Retrieve the buffer */
+        g_signal_emit_by_name (sink, "pull-preroll", &preroll);
+        GstFlowReturn ret = reinterpret_cast<StreamingController *>(data)->gstHandlePreroll(preroll);
+        gst_sample_unref (preroll);
+        return ret;
     }
 
     static GstFlowReturn gst_cb_new_sample(GstAppSink *sink, gpointer *data)
@@ -66,9 +71,7 @@ private:
     int _bytesPerLine;
     QVideoFrame _frame;
 
-    GstElement *pipeline, *source, *sink;
-    GstBus *bus;
-    GstSample *sample;
+    GstElement *pipeline;
 };
 
 #endif //STREAMING_CONTROLLER_HEADER_H
