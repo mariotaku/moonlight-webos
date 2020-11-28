@@ -1,3 +1,6 @@
-#!/bin/sh
+#!/usr/bin/expect -f
 
-ssh lgtv apps/usr/palm/applications/com.limelight.webos/moonlight
+spawn ssh lgtv -t "apps/usr/palm/applications/com.limelight.webos/moonlight"
+expect "Enter passphrase for key *"
+send "FA8A17\r"
+interact

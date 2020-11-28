@@ -56,6 +56,10 @@ WebOSWindow {
         }
     }
 
+    Keys.onPressed: {
+        console.log(event.key);
+    }
+
     onWindowStateChanged: {
         console.log(initialView)
         console.log("WINDOW_CHANGED, status:" + windowState)

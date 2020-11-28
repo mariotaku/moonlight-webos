@@ -60,6 +60,8 @@
         "cfenv": "cpp",
         "cinttypes": "cpp",
         "typeindex": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "qaudiodeviceinfo": "cpp",
+        "qvideosurfaceformat": "cpp"
     }
 }

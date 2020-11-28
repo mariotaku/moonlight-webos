@@ -1,16 +1,18 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QtQuick>
-#include "codec-check.h"
+
+#include "streaming-controller.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QGuiApplication app(argc, argv);
-    qmlRegisterType<CodecChecker>("com.limelight.webos", 1, 0, "CodecChecker");
 
     QQmlApplicationEngine engine;
+
+    StreamingController::registerQmlType();
 
     engine.rootContext()->setContextProperty("initialView", "qrc:/ComputersView.qml");
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));

@@ -5,23 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
+            "name": "Debug over SSH",
+            "type": "gdb",
             "request": "launch",
-            "program": "enter program name, for example ${workspaceFolder}/a.out",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        }
+            "target": "moonlight",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "gdbpath": "/media/developer/temp/gdbstatic",
+            "ssh": {
+                "host": "192.168.4.104",
+                "port": 9922,
+                "forwardX11": false,
+                "cwd": "/media/developer/apps/usr/palm/applications/com.limelight.webos",
+                "keyfile": "/home/mariotaku/.ssh/hometv_webos_unlocked",
+                "user": "prisoner"
+            }
+        },
     ]
 }

@@ -35,23 +35,27 @@ pkg_check_modules(GST REQUIRED IMPORTED_TARGET gstreamer-1.0)
 # QMake is not yet included in SDK itself, that one we needed is located in build-webos/BUILD/sysroots/x86_64-linux
 set(OE_QMAKE_PATH_EXTERNAL_HOST_BINS "/opt/webos-sdk-x86_64/1.0.g/sysroots/x86_64-linux/usr/bin/qt5")
 
-find_package(Qt5 COMPONENTS Core Quick REQUIRED)
+find_package(Qt5 COMPONENTS Core Multimedia Quick REQUIRED)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/pkg_$ENV{ARCH}/")
 set(EXECUTABLE_NAME "moonlight")
 
-add_executable(${EXECUTABLE_NAME} "src/main.cpp" "src/codec-check.cpp" "qml/qml.qrc")
+add_executable(${EXECUTABLE_NAME} "src/main.cpp" "src/streaming-controller.cpp" "qml/qml.qrc")
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES AUTOMOC TRUE)
 target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${GST_INCLUDE_DIRS})
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-target_link_libraries(${EXECUTABLE_NAME} PRIVATE moonlight_core Qt5::Core Qt5::Quick ${GST_LIBRARIES})
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE moonlight_core Qt5::Core Qt5::Multimedia Qt5::Quick ${GST_LIBRARIES})
 
 set(APP_META_DIR "${CMAKE_SOURCE_DIR}/webos-metadata")
 
-add_custom_target("package" COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${APP_META_DIR}
+add_custom_target("package" COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${CMAKE_SOURCE_DIR}
     DEPENDS ${EXECUTABLE_NAME}
 )
 
-add_custom_target("device-install" COMMAND ${CMAKE_SOURCE_DIR}/scripts/device-install.sh ${APP_META_DIR}
+add_custom_target("device-install" COMMAND ${CMAKE_SOURCE_DIR}/scripts/device-install.sh ${CMAKE_SOURCE_DIR}
     DEPENDS "package"
+)
+
+add_custom_target("device-launch" COMMAND ${CMAKE_SOURCE_DIR}/scripts/device-launch.sh ${CMAKE_SOURCE_DIR}
+    DEPENDS "device-install"
 )

@@ -4,8 +4,6 @@ import QtQuick.Layouts 1.1
 import Eos.Controls 0.1
 
 ColumnLayout {
-    anchors.fill: parent
-
     Header {
         id: pageHeader
         Layout.fillWidth: true
@@ -34,6 +32,7 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         Layout.fillHeight: true
+        color: "black"
 
         Button {
             id: mainText

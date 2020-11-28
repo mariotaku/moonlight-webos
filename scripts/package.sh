@@ -1,6 +1,15 @@
 #!/bin/sh
 
-APP_META_DIR=$1
+CMAKE_SOURCE_DIR=$1
+
+if [ -z $CMAKE_SOURCE_DIR ]; then
+  echo 'Source dir not specified!'
+  exit 1
+fi
+
+APP_META_DIR=$CMAKE_SOURCE_DIR/webos-metadata
+ASSETS_DIR=$CMAKE_SOURCE_DIR/assets
+SRC_DIR=$CMAKE_SOURCE_DIR/src
 
 if [ ! -f $APP_META_DIR/appinfo.json ]; then
   echo 'Application metadata is not present'
@@ -12,10 +21,18 @@ if [ -z $ARCH ]; then
   exit 1
 fi
 
+PKG_DEST=pkg_$ARCH
+
 if [ -z $WEBOS_CLI_TV ]; then
   echo 'webOS SDK not found, please check your WEBOS_CLI_TV variable'
   exit 1
 fi
 
-cp -f $APP_META_DIR/* pkg_$ARCH
+rm -rf $PKG_DEST/$APP_META_DIR
+rm -rf $PKG_DEST/$ASSETS_DIR
+rm -rf $PKG_DEST/$SRC_DIR
+
+cp -r $APP_META_DIR $PKG_DEST/
+cp -r $ASSETS_DIR $PKG_DEST/
+cp -r $SRC_DIR $PKG_DEST/
 $WEBOS_CLI_TV/ares-package pkg_$ARCH
