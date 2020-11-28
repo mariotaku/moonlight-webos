@@ -28,9 +28,11 @@ if [ -z $WEBOS_CLI_TV ]; then
   exit 1
 fi
 
-rm -rf $PKG_DEST/$APP_META_DIR
-rm -rf $PKG_DEST/$ASSETS_DIR
+cp -rf $APP_META_DIR/* $PKG_DEST/
 
-cp -r $APP_META_DIR $PKG_DEST/
-cp -r $ASSETS_DIR $PKG_DEST/
-$WEBOS_CLI_TV/ares-package pkg_$ARCH
+rm -rf $PKG_DEST/assets
+if [ -d $ASSETS_DIR ]; then
+  cp -r $ASSETS_DIR $PKG_DEST/
+fi
+
+$WEBOS_CLI_TV/ares-package $PKG_DEST

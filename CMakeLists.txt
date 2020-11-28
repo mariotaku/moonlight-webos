@@ -46,8 +46,6 @@ target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${GST_INCLUDE_DIRS}
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE moonlight_core Qt5::Core Qt5::Multimedia Qt5::Quick ${GST_LIBRARIES})
 
-set(APP_META_DIR "${CMAKE_SOURCE_DIR}/webos-metadata")
-
 add_custom_target("package" COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${CMAKE_SOURCE_DIR}
     DEPENDS ${EXECUTABLE_NAME}
 )
