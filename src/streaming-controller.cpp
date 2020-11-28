@@ -98,9 +98,6 @@ StreamingController::StreamingController(QObject *parent)
 {
     qDebug("Streaming Controller Created");
 
-    /* Initialize GStreamer */
-    gst_init(NULL, NULL);
-
     gstSetup();
 }
 
@@ -160,6 +157,7 @@ void StreamingController::gstSetup()
     GstStateChangeReturn ret;
 
     GstElement *source, *sink;
+    GstPad *src_pad;
     /* Create the elements */
     source = gst_element_factory_make("videotestsrc", "source");
     sink = gst_element_factory_make("appsink", "sink");
@@ -184,9 +182,12 @@ void StreamingController::gstSetup()
 
     /* Modify the source's properties */
     g_object_set(source, "pattern", 0, NULL);
+    src_pad = gst_element_get_static_pad(source, "src_%u");
+    g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (src_pad));
 
     /* Modify the sink's properties */
     g_object_set(sink, "emit-signals", 1, NULL);
+
     g_signal_connect(sink, "new-preroll", G_CALLBACK(gst_cb_new_preroll), this);
     g_signal_connect(sink, "new-sample", G_CALLBACK(gst_cb_new_sample), this);
 

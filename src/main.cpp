@@ -6,6 +6,9 @@
 
 int main(int argc, char *argv[])
 {
+    /* Initialize GStreamer */
+    gst_init(NULL, NULL);
+    
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QGuiApplication app(argc, argv);
