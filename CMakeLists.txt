@@ -41,7 +41,7 @@ find_package(Qt5 COMPONENTS Core Multimedia Quick REQUIRED)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/pkg_$ENV{ARCH}/")
 set(EXECUTABLE_NAME "moonlight")
 
-add_executable(${EXECUTABLE_NAME} "src/main.cpp" "src/streaming-controller.cpp" "src/qgstvideobuffer.cpp" "qml/qml.qrc")
+add_executable(${EXECUTABLE_NAME} "src/main.cpp" "src/streaming-controller.cpp" "qml/qml.qrc")
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES AUTOMOC TRUE)
 target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${GST_INCLUDE_DIRS} ${GSTAPP_INCLUDE_DIRS})
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)

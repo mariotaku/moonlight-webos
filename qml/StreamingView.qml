@@ -1,13 +1,12 @@
 import QtQuick 2.4
-import QtMultimedia 5.6
+import Eos.Items 0.1
 import Moonlight.Streaming 0.1
 
 Rectangle {
     color: "black"
 
-    VideoOutput {
+    PunchThrough {
         id: videoOutput
-        source: streamingController
         anchors.fill: parent
     }
 

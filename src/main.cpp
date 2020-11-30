@@ -7,8 +7,8 @@
 int main(int argc, char *argv[])
 {
     /* Initialize GStreamer */
-    gst_init(NULL, NULL);
-    
+    gst_init(&argc, &argv);
+
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QGuiApplication app(argc, argv);
@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
+    qDebug("Platform name %s", qPrintable(app.platformName()));
 
     return app.exec();
 }

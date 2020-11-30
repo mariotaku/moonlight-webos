@@ -36,40 +36,11 @@ private:
     void gstSetup();
     void gstDestroy();
 
-    QVideoSurfaceFormat formatForCaps(const GstCaps *caps, int *bytesPerLine);
-
-    GstFlowReturn gstHandlePreroll(GstSample *preroll);
-    GstFlowReturn gstHandleSample(GstSample *sample);
-
-    static GstFlowReturn gst_cb_new_preroll(GstAppSink *sink, gpointer *data)
-    {
-        GstSample *preroll;
-        /* Retrieve the buffer */
-        g_signal_emit_by_name (sink, "pull-preroll", &preroll);
-        GstFlowReturn ret = reinterpret_cast<StreamingController *>(data)->gstHandlePreroll(preroll);
-        gst_sample_unref (preroll);
-        return ret;
-    }
-
-    static GstFlowReturn gst_cb_new_sample(GstAppSink *sink, gpointer *data)
-    {
-        GstSample *sample;
-        /* Retrieve the buffer */
-        g_signal_emit_by_name (sink, "pull-sample", &sample);
-        GstFlowReturn ret = reinterpret_cast<StreamingController *>(data)->gstHandleSample(sample);
-        gst_sample_unref (sample);
-        return ret;
-    }
-
-private slots:
-    void queuedRender();
-
 private:
     int currentFrame;
     QAbstractVideoSurface *_surface = nullptr;
     QVideoSurfaceFormat _format;
     int _bytesPerLine;
-    QVideoFrame _frame;
 
     GstElement *pipeline;
 };

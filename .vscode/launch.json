@@ -13,7 +13,8 @@
             "valuesFormatting": "parseText",
             "gdbpath": "/media/developer/apps/usr/palm/applications/com.limelight.webos/assets/temp/gdbstatic",
             "pathSubstitutions": {
-                "${workspaceFolder}/src": "/media/developer/apps/usr/palm/applications/com.limelight.webos/src"
+                "${workspaceFolder}/src": "/media/developer/apps/usr/palm/applications/com.limelight.webos/src",
+                "/opt/webos-sdk-x86_64/1.0.g/sysroots/armv7a-neon-webos-linux-gnueabi/usr/src/debug/glibc": "/usr/src/debug/lib32-glibc"
             },
             "ssh": {
                 "host": "192.168.4.104",
@@ -21,7 +22,8 @@
                 "forwardX11": false,
                 "cwd": "/media/developer/apps/usr/palm/applications/com.limelight.webos",
                 "keyfile": "/home/mariotaku/.ssh/hometv_webos_unlocked",
-                "user": "prisoner"
+                "user": "prisoner",
+                "bootstrap": "source /media/developer/apps/usr/palm/applications/com.limelight.webos/assets/debug/env.sh"
             }
         },
     ]
