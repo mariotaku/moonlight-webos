@@ -10,8 +10,9 @@
             "request": "launch",
             "target": "moonlight",
             "cwd": "${workspaceRoot}",
+            "arguments": "{\\\"@system_native_app\\\":true,\\\"nid\\\":\\\"com.limelight.webos\\\"}",
             "valuesFormatting": "parseText",
-            "gdbpath": "/media/developer/apps/usr/palm/applications/com.limelight.webos/assets/temp/gdbstatic",
+            "gdbpath": "/tmp/gdbstatic",
             "pathSubstitutions": {
                 "${workspaceFolder}/src": "/media/developer/apps/usr/palm/applications/com.limelight.webos/src",
                 "/opt/webos-sdk-x86_64/1.0.g/sysroots/armv7a-neon-webos-linux-gnueabi/usr/src/debug/glibc": "/usr/src/debug/lib32-glibc"
@@ -23,7 +24,7 @@
                 "cwd": "/media/developer/apps/usr/palm/applications/com.limelight.webos",
                 "keyfile": "/home/mariotaku/.ssh/hometv_webos_unlocked",
                 "user": "prisoner",
-                "bootstrap": "source /media/developer/apps/usr/palm/applications/com.limelight.webos/assets/debug/env.sh"
+                "bootstrap": "source /media/developer/apps/usr/palm/applications/com.limelight.webos/assets/debug.env"
             }
         },
     ]

@@ -32,6 +32,7 @@ find_package(PkgConfig REQUIRED)
 # these calls create special `PkgConfig::<MODULE>` variables
 pkg_check_modules(GST REQUIRED IMPORTED_TARGET gstreamer-1.0)
 pkg_check_modules(GSTAPP REQUIRED IMPORTED_TARGET gstreamer-app-1.0)
+pkg_check_modules(UMC REQUIRED IMPORTED_TARGET umedia_api)
 
 # QMake is not yet included in SDK itself, that one we needed is located in build-webos/BUILD/sysroots/x86_64-linux
 set(OE_QMAKE_PATH_EXTERNAL_HOST_BINS "/opt/webos-sdk-x86_64/1.0.g/sysroots/x86_64-linux/usr/bin/qt5")
@@ -43,11 +44,12 @@ set(EXECUTABLE_NAME "moonlight")
 
 add_executable(${EXECUTABLE_NAME} "src/main.cpp" "src/streaming-controller.cpp" "qml/qml.qrc")
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES AUTOMOC TRUE)
-target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${GST_INCLUDE_DIRS} ${GSTAPP_INCLUDE_DIRS})
+target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${GST_INCLUDE_DIRS} ${GSTAPP_INCLUDE_DIRS} ${UMC_INCLUDE_DIRS})
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE moonlight_core
  Qt5::Core Qt5::Multimedia Qt5::Quick # QT libraries
  ${GST_LIBRARIES} ${GSTAPP_LIBRARIES} # GStreamer libraries
+ ${UMC_LIBRARIES} # uMediaClient libraries
 )
 
 add_custom_target("package" COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${CMAKE_SOURCE_DIR}

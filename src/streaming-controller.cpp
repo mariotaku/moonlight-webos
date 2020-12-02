@@ -78,8 +78,7 @@ void StreamingController::gstSetup()
 
     GstElement *bin, *sink;
     /* Build the pipeline */
-    // pipeline = gst_parse_launch("playbin uri=file:///media/developer/apps/usr/palm/applications/com.limelight.webos/assets/temp/twinning.mp4", NULL);
-    pipeline = gst_parse_launch("filesrc location=/media/developer/apps/usr/palm/applications/com.limelight.webos/assets/temp/twinning.mp4 ! qtdemux name=demuxer demuxer. ! queue ! aac_audiodec ! audioconvert ! pulsesink demuxer. ! queue ! h264parse ! lxvideodec ! fakesink", NULL);
+    pipeline = gst_parse_launch("playbin uri=file:///media/developer/apps/usr/palm/applications/com.limelight.webos/assets/temp/twinning.mp4", NULL);
 
     sink = gst_bin_get_by_name(GST_BIN(pipeline), "vsink");
     if (!pipeline || !sink)

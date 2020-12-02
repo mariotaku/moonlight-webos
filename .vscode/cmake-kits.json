@@ -1,0 +1,10 @@
+[
+    {
+        "name": "GCC for arm-webos-linux-gnueabi 6.2.0",
+        "environmentSetupScript": "/opt/webos-sdk-x86_64/1.0.g/environment-setup-armv7a-neon-webos-linux-gnueabi",
+        "compilers": {
+          "C": "/opt/webos-sdk-x86_64/1.0.g/sysroots/x86_64-webossdk-linux/usr/bin/arm-webos-linux-gnueabi/arm-webos-linux-gnueabi-gcc",
+          "CXX": "/opt/webos-sdk-x86_64/1.0.g/sysroots/x86_64-webossdk-linux/usr/bin/arm-webos-linux-gnueabi/arm-webos-linux-gnueabi-g++"
+        }
+      }
+]

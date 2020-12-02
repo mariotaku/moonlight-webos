@@ -24,7 +24,6 @@ WebOSWindow {
     width: 1920
     height: 1080
     visible: true
-    appId: "com.limelight.webos"
     title: "Moonlight"
     color: "black"
 
