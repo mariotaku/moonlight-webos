@@ -5,12 +5,12 @@ import Moonlight.Streaming 0.1
 Rectangle {
     color: "black"
 
-    PunchThrough {
-        id: videoOutput
-        anchors.fill: parent
-    }
-
     StreamingController {
         id: streamingController
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        onClicked: { streamingController.testPlay() }
     }
 }

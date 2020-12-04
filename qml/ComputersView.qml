@@ -29,16 +29,15 @@ ColumnLayout {
         }
     }
 
-    Rectangle {
+    GridView {
+        id: grid
         Layout.fillWidth: true
         Layout.fillHeight: true
-        color: "black"
+        cellWidth: 80; cellHeight: 80
 
-        Button {
-            id: mainText
-            anchors.centerIn: parent
-            text: "Launch GameStream"
-            onClicked: navigateTo("qrc:/StreamingView.qml", qsTr("StreamingView"))
-        }
+        model: ContactModel {}
+        delegate: contactDelegate
+        highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
+        focus: true
     }
 }

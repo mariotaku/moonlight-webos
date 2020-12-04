@@ -2,13 +2,11 @@
 #include <QQmlApplicationEngine>
 #include <QtQuick>
 
+#include "computers-controller.h"
 #include "streaming-controller.h"
 
 int main(int argc, char *argv[])
 {
-    /* Initialize GStreamer */
-    gst_init(&argc, &argv);
-
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QGuiApplication app(argc, argv);
