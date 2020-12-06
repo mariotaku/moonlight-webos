@@ -1,6 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QtQuick>
+#include <QImage>
 
 #include "controller/streaming.h"
 #include "gui/computermodel.h"
@@ -29,9 +30,8 @@ int main(int argc, char *argv[])
     StreamingController::registerQmlType();
 
     QQmlApplicationEngine engine;
-
-    engine.rootContext()->setContextProperty("initialView", "qrc:/ComputersView.qml");
-    engine.load(QUrl(QStringLiteral("qrc:/App.qml")));
+    engine.rootContext()->setContextProperty("initialView", "qrc:/gui/ComputersView.qml");
+    engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
 

@@ -1,7 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>App.qml</file>
-        <file>ComputersView.qml</file>
-        <file>StreamingView.qml</file>
-    </qresource>
-</RCC>

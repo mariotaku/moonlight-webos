@@ -1,0 +1,12 @@
+<RCC>
+    <!-- Update with `find app/ -name '*.qml' -printf '        <file>%P</file>\n'` -->
+    <qresource prefix="/">
+        <file>gui/CenteredGridView.qml</file>
+        <file>gui/ComputersView.qml</file>
+        <file>gui/main.qml</file>
+        <file>gui/NavigableItemDelegate.qml</file>
+        <file>gui/NavigableMenu.qml</file>
+        <file>gui/NavigableMenuItem.qml</file>
+        <file>gui/StreamingView.qml</file>
+    </qresource>
+</RCC>

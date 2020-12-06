@@ -43,7 +43,8 @@ add_executable(${EXECUTABLE_NAME}
     "app/main.cpp"
     "app/settings/streamingpreferences.cpp"
     "app/wm.cpp"
-    "qml/qml.qrc"
+    "app/qml.qrc"
+    "app/resources.qrc"
 )
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES

@@ -25,9 +25,9 @@ WebOSWindow {
     property bool pollingActive: false
 
     id: root
+    visible: true
     width: 1920
     height: 1080
-    visible: true
     title: "Moonlight"
     color: "black"
 
