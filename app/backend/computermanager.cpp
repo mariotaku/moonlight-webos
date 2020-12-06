@@ -368,6 +368,201 @@ QVector<NvComputer*> ComputerManager::getComputers()
     return QVector<NvComputer*>::fromList(m_KnownHosts.values());
 }
 
+class DeferredHostDeletionTask : public QRunnable
+{
+public:
+    DeferredHostDeletionTask(ComputerManager* cm, NvComputer* computer)
+        : m_Computer(computer),
+          m_ComputerManager(cm) {}
+
+    void run()
+    {
+        ComputerPollingEntry* pollingEntry;
+
+        // Only do the minimum amount of work while holding the writer lock.
+        // We must release it before calling saveHosts().
+        {
+            QWriteLocker lock(&m_ComputerManager->m_Lock);
+
+            pollingEntry = m_ComputerManager->m_PollEntries.take(m_Computer->uuid);
+
+            m_ComputerManager->m_KnownHosts.remove(m_Computer->uuid);
+        }
+
+        // Persist the new host list
+        m_ComputerManager->saveHosts();
+
+        // Delete the polling entry first. This will stop all polling threads too.
+        delete pollingEntry;
+
+        // Delete cached box art
+        // BoxArtManager::deleteBoxArt(m_Computer);
+
+        // Finally, delete the computer itself. This must be done
+        // last because the polling thread might be using it.
+        delete m_Computer;
+    }
+
+private:
+    NvComputer* m_Computer;
+    ComputerManager* m_ComputerManager;
+};
+
+void ComputerManager::deleteHost(NvComputer* computer)
+{
+    // Punt to a worker thread to avoid stalling the
+    // UI while waiting for the polling thread to die
+    QThreadPool::globalInstance()->start(new DeferredHostDeletionTask(this, computer));
+}
+
+void ComputerManager::renameHost(NvComputer* computer, QString name)
+{
+    {
+        QWriteLocker(&computer->lock);
+
+        computer->name = name;
+        computer->hasCustomName = true;
+    }
+
+    // Notify the UI of the state change
+    handleComputerStateChanged(computer);
+}
+
+void ComputerManager::clientSideAttributeUpdated(NvComputer* computer)
+{
+    // Persist the change
+    saveHosts();
+
+    // Notify the UI of the state change
+    handleComputerStateChanged(computer);
+}
+
+void ComputerManager::handleAboutToQuit()
+{
+    QWriteLocker lock(&m_Lock);
+
+    // Interrupt polling threads immediately, so they
+    // avoid making additional requests while quitting
+    for (ComputerPollingEntry* entry : m_PollEntries) {
+        entry->interrupt();
+    }
+}
+
+class PendingPairingTask : public QObject, public QRunnable
+{
+    Q_OBJECT
+
+public:
+    PendingPairingTask(ComputerManager* computerManager, NvComputer* computer, QString pin)
+        : m_Computer(computer),
+          m_Pin(pin)
+    {
+        connect(this, &PendingPairingTask::pairingCompleted,
+                computerManager, &ComputerManager::pairingCompleted);
+    }
+
+signals:
+    void pairingCompleted(NvComputer* computer, QString error);
+
+private:
+    void run()
+    {
+        NvPairingManager pairingManager(m_Computer->activeAddress);
+
+        try {
+           NvPairingManager::PairState result = pairingManager.pair(m_Computer->appVersion, m_Pin, m_Computer->serverCert);
+           switch (result)
+           {
+           case NvPairingManager::PairState::PIN_WRONG:
+               emit pairingCompleted(m_Computer, "The PIN from the PC didn't match. Please try again.");
+               break;
+           case NvPairingManager::PairState::FAILED:
+               emit pairingCompleted(m_Computer, "Pairing failed. Please try again.");
+               break;
+           case NvPairingManager::PairState::ALREADY_IN_PROGRESS:
+               emit pairingCompleted(m_Computer, "Another pairing attempt is already in progress.");
+               break;
+           case NvPairingManager::PairState::PAIRED:
+               emit pairingCompleted(m_Computer, nullptr);
+               break;
+           }
+        } catch (const GfeHttpResponseException& e) {
+            emit pairingCompleted(m_Computer, "GeForce Experience returned error: " + e.toQString());
+        } catch (const QtNetworkReplyException& e) {
+            emit pairingCompleted(m_Computer, e.toQString());
+        }
+    }
+
+    NvComputer* m_Computer;
+    QString m_Pin;
+};
+
+void ComputerManager::pairHost(NvComputer* computer, QString pin)
+{
+    // Punt to a worker thread to avoid stalling the
+    // UI while waiting for pairing to complete
+    PendingPairingTask* pairing = new PendingPairingTask(this, computer, pin);
+    QThreadPool::globalInstance()->start(pairing);
+}
+
+class PendingQuitTask : public QObject, public QRunnable
+{
+    Q_OBJECT
+
+public:
+    PendingQuitTask(ComputerManager* computerManager, NvComputer* computer)
+        : m_Computer(computer)
+    {
+        connect(this, &PendingQuitTask::quitAppFailed,
+                computerManager, &ComputerManager::quitAppCompleted);
+    }
+
+signals:
+    void quitAppFailed(QString error);
+
+private:
+    void run()
+    {
+        NvHTTP http(m_Computer->activeAddress, m_Computer->serverCert);
+
+        try {
+            if (m_Computer->currentGameId != 0) {
+                http.quitApp();
+            }
+        } catch (const GfeHttpResponseException& e) {
+            {
+                QWriteLocker lock(&m_Computer->lock);
+                m_Computer->pendingQuit = false;
+            }
+            if (e.getStatusCode() == 599) {
+                // 599 is a special code we make a custom message for
+                emit quitAppFailed(tr("The running game wasn't started by this PC. "
+                                      "You must quit the game on the host PC manually or use the device that originally started the game."));
+            }
+            else {
+                emit quitAppFailed(e.toQString());
+            }
+        } catch (const QtNetworkReplyException& e) {
+            {
+                QWriteLocker lock(&m_Computer->lock);
+                m_Computer->pendingQuit = false;
+            }
+            emit quitAppFailed(e.toQString());
+        }
+    }
+
+    NvComputer* m_Computer;
+};
+
+void ComputerManager::quitRunningApp(NvComputer* computer)
+{
+    QWriteLocker lock(&computer->lock);
+    computer->pendingQuit = true;
+
+    PendingQuitTask* quit = new PendingQuitTask(this, computer);
+    QThreadPool::globalInstance()->start(quit);
+}
+
 void ComputerManager::stopPollingAsync()
 {
     QWriteLocker lock(&m_Lock);

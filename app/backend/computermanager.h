@@ -1,6 +1,7 @@
 #pragma once
 
-#include "backend/nvcomputer.h"
+#include "nvcomputer.h"
+#include "nvpairingmanager.h"
 
 #include <qmdnsengine/server.h>
 #include <qmdnsengine/cache.h>
@@ -8,11 +9,9 @@
 #include <qmdnsengine/service.h>
 #include <qmdnsengine/resolver.h>
 
-#include <QObject>
-#include <QVector>
-
 #include <QThread>
 #include <QReadWriteLock>
+#include <QSettings>
 #include <QRunnable>
 #include <QTimer>
 
@@ -171,22 +170,34 @@ public:
 
     Q_INVOKABLE void addNewHost(QString address, bool mdns, QHostAddress mdnsIpv6Address = QHostAddress());
 
+    void pairHost(NvComputer* computer, QString pin);
+
+    void quitRunningApp(NvComputer* computer);
+
     QVector<NvComputer*> getComputers();
+
+    // computer is deleted inside this call
+    void deleteHost(NvComputer* computer);
+
+    void renameHost(NvComputer* computer, QString name);
+
+    void clientSideAttributeUpdated(NvComputer* computer);
 
 signals:
     void computerStateChanged(NvComputer* computer);
+
+    void pairingCompleted(NvComputer* computer, QString error);
 
     void computerAddCompleted(QVariant success, QVariant detectedPortBlocking);
     
     void quitAppCompleted(QVariant error);
 
-
 private slots:
+    void handleAboutToQuit();
 
     void handleComputerStateChanged(NvComputer* computer);
 
     void handleMdnsServiceResolved(MdnsPendingComputer* computer, QVector<QHostAddress>& addresses);
-
 
 private:
     void saveHosts();

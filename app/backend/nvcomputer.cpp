@@ -144,6 +144,94 @@ NvComputer::NvComputer(QString address, QString serverInfo, QSslCertificate serv
     this->pendingQuit = false;
 }
 
+bool NvComputer::wake()
+{
+    if (state == NvComputer::CS_ONLINE) {
+        qWarning() << name << "is already online";
+        return true;
+    }
+
+    if (macAddress.isEmpty()) {
+        qWarning() << name << "has no MAC address stored";
+        return false;
+    }
+
+    const quint16 WOL_PORTS[] = {
+        9, // Standard WOL port (privileged port)
+        47998, 47999, 48000, 48002, 48010, // Ports opened by GFE
+        47009, // Port opened by Moonlight Internet Hosting Tool for WoL (non-privileged port)
+    };
+
+    // Create the WoL payload
+    QByteArray wolPayload;
+    wolPayload.append(QByteArray::fromHex("FFFFFFFFFFFF"));
+    for (int i = 0; i < 16; i++) {
+        wolPayload.append(macAddress);
+    }
+    Q_ASSERT(wolPayload.count() == 102);
+
+    // Add the addresses that we know this host to be
+    // and broadcast addresses for this link just in
+    // case the host has timed out in ARP entries.
+    QVector<QString> addressList = uniqueAddresses();
+    addressList.append("255.255.255.255");
+
+    // Try to broadcast on all available NICs
+    for (const QNetworkInterface& nic : QNetworkInterface::allInterfaces()) {
+        // Ensure the interface is up and skip the loopback adapter
+        if ((nic.flags() & QNetworkInterface::IsUp) == 0 ||
+                (nic.flags() & QNetworkInterface::IsLoopBack) != 0) {
+            continue;
+        }
+
+        QHostAddress allNodesMulticast("FF02::1");
+        for (const QNetworkAddressEntry& addr : nic.addressEntries()) {
+            // Store the scope ID for this NIC if IPv6 is enabled
+            if (!addr.ip().scopeId().isEmpty()) {
+                allNodesMulticast.setScopeId(addr.ip().scopeId());
+            }
+
+            // Skip IPv6 which doesn't support broadcast
+            if (!addr.broadcast().isNull()) {
+                addressList.append(addr.broadcast().toString());
+            }
+        }
+
+        if (!allNodesMulticast.scopeId().isEmpty()) {
+            addressList.append(allNodesMulticast.toString());
+        }
+    }
+
+    // Try all unique address strings or host names
+    bool success = false;
+    for (QString& addressString : addressList) {
+        QHostInfo hostInfo = QHostInfo::fromName(addressString);
+
+        if (hostInfo.error() != QHostInfo::NoError) {
+            qWarning() << "Error resolving" << addressString << ":" << hostInfo.errorString();
+            continue;
+        }
+
+        // Try all IP addresses that this string resolves to
+        for (QHostAddress& address : hostInfo.addresses()) {
+            QUdpSocket sock;
+
+            // Send to all ports
+            for (quint16 port : WOL_PORTS) {
+                if (sock.writeDatagram(wolPayload, address, port)) {
+                    qInfo().nospace().noquote() << "Sent WoL packet to " << name << " via " << address.toString() << ":" << port;
+                    success = true;
+                }
+                else {
+                    qWarning() << "Send failed:" << sock.error();
+                }
+            }
+        }
+    }
+
+    return success;
+}
+
 bool NvComputer::isReachableOverVpn()
 {
     if (activeAddress.isEmpty()) {

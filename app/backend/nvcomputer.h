@@ -22,6 +22,7 @@ private:
 
 public:
     explicit NvComputer(QString address, QString serverInfo, QSslCertificate serverCert);
+    
     explicit NvComputer(QSettings& settings);
 
     bool

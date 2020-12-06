@@ -38,6 +38,7 @@ add_executable(${EXECUTABLE_NAME}
     "app/backend/nvapp.cpp"
     "app/backend/nvcomputer.cpp"
     "app/backend/nvhttp.cpp"
+    "app/backend/nvpairingmanager.cpp"
     "app/controller/streaming.cpp"
     "app/gui/computermodel.cpp"
     "app/main.cpp"

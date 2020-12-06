@@ -29,8 +29,28 @@ public:
 
     virtual QHash<int, QByteArray> roleNames() const override;
 
+    Q_INVOKABLE void deleteComputer(int computerIndex);
+
+    Q_INVOKABLE QString generatePinString();
+
+    Q_INVOKABLE void pairComputer(int computerIndex, QString pin);
+
+    Q_INVOKABLE void testConnectionForComputer(int computerIndex);
+
+    Q_INVOKABLE void wakeComputer(int computerIndex);
+
+    Q_INVOKABLE void renameComputer(int computerIndex, QString name);
+
+    // Q_INVOKABLE Session* createSessionForCurrentGame(int computerIndex);
+
+signals:
+    void pairingCompleted(QVariant error);
+    void connectionTestCompleted(int result, QString blockedPorts);
+
 private slots:
     void handleComputerStateChanged(NvComputer* computer);
+
+    void handlePairingCompleted(NvComputer* computer, QString error);
 
 private:
     QVector<NvComputer*> m_Computers;

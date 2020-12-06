@@ -192,6 +192,14 @@ ColumnLayout {
     }
 
 
+    NavigableMessageDialog {
+        id: pairDialog
+
+        // don't allow edits to the rest of the window while open
+        property string pin : "0000"
+        text:qsTr("Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.").arg(pin)
+    }
+
     function createModel()
     {
         var model = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', parent, '')
