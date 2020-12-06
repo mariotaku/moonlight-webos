@@ -68,6 +68,7 @@
         "string_view": "cpp",
         "future": "cpp",
         "mutex": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "qobject": "cpp"
     },
 }

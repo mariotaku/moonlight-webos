@@ -12,7 +12,7 @@ class NvComputer
     friend class PcMonitorThread;
     friend class ComputerManager;
     friend class PendingQuitTask;
-
+    
 private:
     void sortAppList();
 
@@ -22,7 +22,6 @@ private:
 
 public:
     explicit NvComputer(QString address, QString serverInfo, QSslCertificate serverCert);
-
     explicit NvComputer(QSettings& settings);
 
     bool
@@ -77,7 +76,7 @@ public:
     QString uuid;
     QSslCertificate serverCert;
     QVector<NvApp> appList;
-
+    
     // Synchronization
     mutable QReadWriteLock lock;
 };

@@ -14,7 +14,7 @@
             "valuesFormatting": "parseText",
             "gdbpath": "/tmp/gdbstatic",
             "pathSubstitutions": {
-                "${workspaceFolder}/src": "/media/developer/apps/usr/palm/applications/com.limelight.webos/src",
+                "${workspaceFolder}": "/media/developer/apps/usr/palm/applications/com.limelight.webos",
                 "/opt/webos-sdk-x86_64/1.0.g/sysroots/armv7a-neon-webos-linux-gnueabi/usr/src/debug/glibc": "/usr/src/debug/lib32-glibc"
             },
             "ssh": {
@@ -26,6 +26,6 @@
                 "user": "prisoner",
                 "bootstrap": "source /media/developer/apps/usr/palm/applications/com.limelight.webos/assets/debug.env"
             }
-        },
+        }
     ]
 }

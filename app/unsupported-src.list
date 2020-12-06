@@ -1,0 +1,12 @@
+app/streaming/audio/renderers/slaud.cpp
+app/streaming/audio/renderers/soundioaudiorenderer.cpp
+app/streaming/video/ffmpeg-renderers/cuda.cpp
+app/streaming/video/ffmpeg-renderers/drm.cpp
+app/streaming/video/ffmpeg-renderers/dxva2.cpp
+app/streaming/video/ffmpeg-renderers/eglvid.cpp
+app/streaming/video/ffmpeg-renderers/egl_extensions.cpp
+app/streaming/video/ffmpeg-renderers/mmal.cpp
+app/streaming/video/ffmpeg-renderers/vaapi.cpp
+app/streaming/video/ffmpeg-renderers/vdpau.cpp
+app/streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.cpp
+app/streaming/video/slvid.cpp

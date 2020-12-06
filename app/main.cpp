@@ -2,8 +2,10 @@
 #include <QQmlApplicationEngine>
 #include <QtQuick>
 
-#include "computers-controller.h"
-#include "streaming-controller.h"
+#include "controller/streaming.h"
+#include "gui/computermodel.h"
+#include "backend/computermanager.h"
+#include "settings/streamingpreferences.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,15 +14,26 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     app.setApplicationName("com.limelight.webos");
 
-    QQmlApplicationEngine engine;
+    qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
+    qmlRegisterSingletonType<ComputerManager>("ComputerManager", 1, 0,
+                                              "ComputerManager",
+                                              [](QQmlEngine*, QJSEngine*) -> QObject* {
+                                                  return new ComputerManager();
+                                              });
+    qmlRegisterSingletonType<StreamingPreferences>("StreamingPreferences", 1, 0,
+                                                "StreamingPreferences",
+                                                [](QQmlEngine*, QJSEngine*) -> QObject* {
+                                                    return new StreamingPreferences();
+                                                });
 
     StreamingController::registerQmlType();
 
+    QQmlApplicationEngine engine;
+
     engine.rootContext()->setContextProperty("initialView", "qrc:/ComputersView.qml");
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    engine.load(QUrl(QStringLiteral("qrc:/App.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
-    qDebug("Platform name %s", qPrintable(app.platformName()));
 
     return app.exec();
 }

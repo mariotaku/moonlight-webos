@@ -74,7 +74,6 @@ set(SRC
 
 add_library(moonlight-common-c ${INCLUDES} ${SRC})
 
-
 set_target_properties(moonlight-common-c PROPERTIES
     PUBLIC_HEADER         moonlight-common-c/src/Limelight.h
     VERSION               ${PROJECT_VERSION}
