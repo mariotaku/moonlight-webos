@@ -16,6 +16,7 @@
 
 import QtQuick 2.4
 import QtQuick.Controls 1.4
+import WebOS.Global 1.0
 import Eos.Window 0.1
 import Eos.Controls 0.1
 
@@ -30,6 +31,11 @@ WebOSWindow {
     height: 1080
     title: "Moonlight"
     color: "black"
+    keyMask: WebOSWindow.KeyMaskBack | keyMask
+
+    Component.onCompleted: {
+        windowProperties["_WEBOS_ACCESS_POLICY_KEYS_BACK"] = "true"
+    }
 
     StackView {
         id: stackView
@@ -44,19 +50,20 @@ WebOSWindow {
             }
         }
 
-        Keys.onEscapePressed: {
-            root.navigateUp();
-        }
-
-        Keys.onBackPressed: {
-            root.navigateUp();
-        }
-
         Keys.onPressed: {
-            if (event.key == Qt.Key_0) {
-                root.navigateUp();
+            if (event.key == WebOS.Key_webOS_Back) {
+                root.navigateUp()
             }
         }
+
+        Keys.onEscapePressed: {
+            root.navigateUp()
+        }
+        
+        Keys.onBackPressed: {
+            root.navigateUp()
+        }
+
     }
 
     // This timer keeps us polling for 5 minutes of inactivity
@@ -113,15 +120,6 @@ WebOSWindow {
             // if focus does not return within a few minutes.
             inactivityTimer.restart()
         }
-    }
-
-    Keys.onPressed: {
-        console.log(event.key);
-    }
-
-    onWindowStateChanged: {
-        console.log(initialView)
-        console.log("WINDOW_CHANGED, status:" + windowState)
     }
 
     function navigateUp() {

@@ -5,6 +5,5 @@
   "type": "native",
   "main": "moonlight",
   "title": "Moonlight",
-  "icon": "icon.png",
-  "requiredPermissions" : ["time", "applications"]
+  "icon": "icon.png"
 }

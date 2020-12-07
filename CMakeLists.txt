@@ -43,6 +43,7 @@ add_executable(${EXECUTABLE_NAME}
     "app/gui/computermodel.cpp"
     "app/main.cpp"
     "app/settings/streamingpreferences.cpp"
+    "app/streaming/session.cpp"
     "app/wm.cpp"
     "app/qml.qrc"
     "app/resources.qrc"

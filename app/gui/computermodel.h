@@ -1,5 +1,5 @@
 #include "backend/computermanager.h"
-// #include "streaming/session.h"
+#include "streaming/session.h"
 
 #include <QAbstractListModel>
 
@@ -41,7 +41,7 @@ public:
 
     Q_INVOKABLE void renameComputer(int computerIndex, QString name);
 
-    // Q_INVOKABLE Session* createSessionForCurrentGame(int computerIndex);
+    Q_INVOKABLE Session* createSessionForCurrentGame(int computerIndex);
 
 signals:
     void pairingCompleted(QVariant error);

@@ -14,4 +14,4 @@ EXE_NAME=$(jq -r .main ${APP_META_DIR}/appinfo.json)
 
 DEVICE=hometv-nopass
 
-ssh $DEVICE "apps/usr/palm/applications/${PKG_NAME}/${EXE_NAME}"
+ssh $DEVICE "killall ${EXE_NAME}; apps/usr/palm/applications/${PKG_NAME}/${EXE_NAME}"
