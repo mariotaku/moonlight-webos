@@ -369,6 +369,11 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
 {
 }
 
+Session::Session(QObject *parent)
+{
+    qCritical() << "It has been created via QML and that's an error";
+}
+
 // NB: This may not get destroyed for a long time! Don't put any vital cleanup here.
 // Use Session::exec() or DeferredSessionCleanupTask instead.
 Session::~Session()

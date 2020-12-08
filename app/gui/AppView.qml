@@ -93,6 +93,11 @@ GridView {
             }
 
             var component = Qt.createComponent("StreamSegue.qml")
+            if (component.status != Component.Ready)
+            {
+                console.error(component.errorString());
+                return;
+            }
             var segue = component.createObject(stackView, {"appName": model.name, "session": appModel.createSessionForApp(index)})
             stackView.push(segue)
         }

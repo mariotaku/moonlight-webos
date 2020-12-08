@@ -104,7 +104,11 @@ int main(int argc, char *argv[])
 
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
     qmlRegisterType<AppModel>("AppModel", 1, 0, "AppModel");
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     qmlRegisterUncreatableType<Session>("Session", 1, 0, "Session", "Session cannot be created from QML");
+#else
+    qmlRegisterType<Session>("Session", 1, 0, "Session");
+#endif
     qmlRegisterSingletonType<ComputerManager>("ComputerManager", 1, 0,
                                               "ComputerManager",
                                               [](QQmlEngine *, QJSEngine *) -> QObject * {
@@ -115,6 +119,9 @@ int main(int argc, char *argv[])
                                                    [](QQmlEngine *, QJSEngine *) -> QObject * {
                                                        return new StreamingPreferences();
                                                    });
+
+    // Create the identity manager on the main thread
+    IdentityManager::get();
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("initialView", "qrc:/gui/PcView.qml");

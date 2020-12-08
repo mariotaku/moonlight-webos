@@ -21,6 +21,8 @@ class Session : public QObject
 public:
     explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
 
+    explicit Session(QObject *parent = nullptr);
+
     virtual ~Session();
 
     Q_INVOKABLE void exec(int displayOriginX, int displayOriginY);

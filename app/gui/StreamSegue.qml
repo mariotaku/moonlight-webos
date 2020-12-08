@@ -161,7 +161,7 @@ Item {
             // SdlGamepadKeyNavigation.disable()
 
             // Run the streaming session to completion
-            session.exec(Screen.virtualX, Screen.virtualY)
+            session.exec(0, 0)
         }
 
         sourceComponent: Item {}

@@ -97,6 +97,4 @@ add_custom_target("device-install" COMMAND ${CMAKE_SOURCE_DIR}/scripts/device-in
     DEPENDS "webos-package"
 )
 
-add_custom_target("device-launch" COMMAND ${CMAKE_SOURCE_DIR}/scripts/device-launch.sh ${CMAKE_SOURCE_DIR}
-    DEPENDS "device-install"
-)
+add_custom_target("device-launch" COMMAND ${CMAKE_SOURCE_DIR}/scripts/device-launch.sh ${CMAKE_SOURCE_DIR})
