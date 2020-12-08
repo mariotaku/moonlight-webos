@@ -1,7 +1,9 @@
 import QtQuick 2.4
 import QtQuick.Controls 1.4
+import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.1
 
+import WebOS.Global 1.0
 import Eos.Controls 0.1
 
 import ComputerModel 1.0
@@ -13,6 +15,48 @@ ColumnLayout {
     property ComputerModel computerModel : createModel()
 
     focus: true
+    
+    Component.onCompleted: {
+        // Don't show any highlighted item until interacting with them.
+        // We do this here instead of onActivated to avoid losing the user's
+        // selection when backing out of a different page of the app.
+        currentIndex = -1
+    }
+
+    // Note: Any initialization done here that is critical for streaming must
+    // also be done in CliStartStreamSegue.qml, since this code does not run
+    // for command-line initiated streams.
+    // StackView.onActivated: {
+    //     // Setup signals on CM
+    //     ComputerManager.computerAddCompleted.connect(addComplete)
+
+    //     // This is a bit of a hack to do this here as opposed to main.qml, but
+    //     // we need it enabled before calling getConnectedGamepads() and PcView
+    //     // is never destroyed, so it should be okay.
+    //     // SdlGamepadKeyNavigation.enable()
+
+    //     // Highlight the first item if a gamepad is connected
+    //     if (currentIndex == -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
+    //         currentIndex = 0
+    //     }
+    // }
+
+    // StackView.onDeactivating: {
+    //     ComputerManager.computerAddCompleted.disconnect(addComplete)
+    // }
+
+    function pairingComplete(error)
+    {
+        // Close the PIN dialog
+        pairDialog.close()
+
+        // Display a failed dialog if we got an error
+        if (error !== undefined) {
+            errorDialog.text = error
+            errorDialog.helpText = ""
+            errorDialog.open()
+        }
+    }
 
     Header {
         id: pageHeader
@@ -30,18 +74,17 @@ ColumnLayout {
             Button {
                 id: addDevice
                 text: "Add device"
-                KeyNavigation.right: help
+                // shortcut: WebOS.Key_webOS_Blue
             }
             Button {
                 id: help
                 text: "Help"
-                KeyNavigation.left: addDevice
-                KeyNavigation.right: settings
+                // shortcut: WebOS.Key_webOS_Green
             }
             Button {
                 id: settings
                 text: "Settings"
-                KeyNavigation.left: help
+                // shortcut: WebOS.Key_webOS_Yellow
             }
         }
     }
@@ -89,7 +132,7 @@ ColumnLayout {
                 visible: model.statusUnknown
             }
 
-            BodyText {
+            Text {
                 color: "white"
                 id: pcNameText
                 text: model.name
@@ -185,18 +228,42 @@ ColumnLayout {
                         pcContextMenu.open()
                     }
                 }
+
+                onPressAndHold: {
+                    // popup() ensures the menu appears under the mouse cursor
+                    if (pcContextMenu.popup) {
+                        pcContextMenu.popup()
+                    }
+                    else {
+                        // Qt 5.9 doesn't have popup()
+                        pcContextMenu.open()
+                    }
+                }
+
             }
         }
-        highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
         focus: true
     }
 
+    MessageDialog {
+        id: errorDialog
 
-    NavigableMessageDialog {
-        id: pairDialog
+        standardButtons: Dialog.Ok | Dialog.Help
 
+        // Using Setup-Guide here instead of Troubleshooting because it's likely that users
+        // will arrive here by forgetting to enable GameStream or not forwarding ports.
+        // helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
+        property string helpText
+        property string helpUrl
+        property string helpTextSeparator: " "
+    }
+
+    MessageDialog {
         // don't allow edits to the rest of the window while open
         property string pin : "0000"
+        
+        id: pairDialog
+        standardButtons: StandardButton.Cancel
         text:qsTr("Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.").arg(pin)
     }
 
@@ -204,7 +271,7 @@ ColumnLayout {
     {
         var model = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', parent, '')
         model.initialize(ComputerManager)
-        // model.pairingCompleted.connect(pairingComplete)
+        model.pairingCompleted.connect(pairingComplete)
         // model.connectionTestCompleted.connect(testConnectionDialog.connectionTestComplete)
         return model
     }

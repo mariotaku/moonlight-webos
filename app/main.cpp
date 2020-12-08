@@ -18,14 +18,14 @@ int main(int argc, char *argv[])
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
     qmlRegisterSingletonType<ComputerManager>("ComputerManager", 1, 0,
                                               "ComputerManager",
-                                              [](QQmlEngine*, QJSEngine*) -> QObject* {
+                                              [](QQmlEngine *, QJSEngine *) -> QObject * {
                                                   return new ComputerManager();
                                               });
     qmlRegisterSingletonType<StreamingPreferences>("StreamingPreferences", 1, 0,
-                                                "StreamingPreferences",
-                                                [](QQmlEngine*, QJSEngine*) -> QObject* {
-                                                    return new StreamingPreferences();
-                                                });
+                                                   "StreamingPreferences",
+                                                   [](QQmlEngine *, QJSEngine *) -> QObject * {
+                                                       return new StreamingPreferences();
+                                                   });
 
     StreamingController::registerQmlType();
 

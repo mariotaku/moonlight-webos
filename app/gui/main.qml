@@ -16,6 +16,7 @@
 
 import QtQuick 2.4
 import QtQuick.Controls 1.4
+
 import WebOS.Global 1.0
 import Eos.Window 0.1
 import Eos.Controls 0.1
@@ -36,7 +37,7 @@ WebOSWindow {
     Component.onCompleted: {
         windowProperties["_WEBOS_ACCESS_POLICY_KEYS_BACK"] = "true"
     }
-
+    
     StackView {
         id: stackView
         initialItem: initialView
