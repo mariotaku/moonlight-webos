@@ -60,6 +60,7 @@ add_executable(${EXECUTABLE_NAME}
     "app/streaming/session.cpp"
     "app/streaming/streamutils.cpp"
     "app/streaming/video/overlaymanager.cpp"
+    "app/streaming/video/webos.cpp"
     "app/wm.cpp"
     "app/qml.qrc"
     "app/resources.qrc"

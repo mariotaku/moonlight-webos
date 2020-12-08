@@ -228,6 +228,18 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
 #endif
 
 #ifdef HAVE_WEBOS
+    chosenDecoder = new WebOSVideoDecoder(testOnly);
+    if (chosenDecoder->initialize(&params)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "webOS system video decoder chosen");
+        return true;
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to load webOS decoder");
+        delete chosenDecoder;
+        chosenDecoder = nullptr;
+    }
 #endif
 
 #if !defined(HAVE_FFMPEG) && !defined(HAVE_SLVIDEO) && !defined(HAVE_WEBOS)
