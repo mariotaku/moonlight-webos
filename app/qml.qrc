@@ -9,5 +9,6 @@
         <file>gui/NavigableMenuItem.qml</file>
         <file>gui/PcView.qml</file>
         <file>gui/StreamingView.qml</file>
+        <file>gui/StreamSegue.qml</file>
     </qresource>
 </RCC>

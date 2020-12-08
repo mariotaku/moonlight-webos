@@ -31,7 +31,7 @@ find_package(Qt5 COMPONENTS Core Multimedia Quick REQUIRED)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/pkg_$ENV{ARCH}/")
 set(EXECUTABLE_NAME "moonlight")
 
-# Update with `find app/ -name '*.cpp' -printf '    "%p"\n' | grep -vFf app/unsupported-src.list`
+# Update with `find app/ -name '*.cpp' -printf '    "app/%P"\n' | grep -vFf app/unsupported-src.list`
 add_executable(${EXECUTABLE_NAME} 
     "app/backend/boxartmanager.cpp"
     "app/backend/computermanager.cpp"
@@ -40,13 +40,18 @@ add_executable(${EXECUTABLE_NAME}
     "app/backend/nvcomputer.cpp"
     "app/backend/nvhttp.cpp"
     "app/backend/nvpairingmanager.cpp"
+    "app/backend/richpresencemanager.cpp"
     "app/controller/streaming.cpp"
     "app/gui/appmodel.cpp"
     "app/gui/computermodel.cpp"
     "app/main.cpp"
     "app/path.cpp"
     "app/settings/streamingpreferences.cpp"
+    "app/streaming/input/gamepad.cpp"
+    "app/streaming/input/input.cpp"
     "app/streaming/session.cpp"
+    "app/streaming/streamutils.cpp"
+    "app/streaming/video/overlaymanager.cpp"
     "app/wm.cpp"
     "app/qml.qrc"
     "app/resources.qrc"

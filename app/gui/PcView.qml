@@ -28,24 +28,32 @@ GridView {
     // Note: Any initialization done here that is critical for streaming must
     // also be done in CliStartStreamSegue.qml, since this code does not run
     // for command-line initiated streams.
-    // StackView.onActivated: {
-    //     // Setup signals on CM
-    //     ComputerManager.computerAddCompleted.connect(addComplete)
+    function onStackViewActivated() {
+        // Setup signals on CM
+        ComputerManager.computerAddCompleted.connect(addComplete)
 
-    //     // This is a bit of a hack to do this here as opposed to main.qml, but
-    //     // we need it enabled before calling getConnectedGamepads() and PcView
-    //     // is never destroyed, so it should be okay.
-    //     // SdlGamepadKeyNavigation.enable()
+        // This is a bit of a hack to do this here as opposed to main.qml, but
+        // we need it enabled before calling getConnectedGamepads() and PcView
+        // is never destroyed, so it should be okay.
+        // SdlGamepadKeyNavigation.enable()
 
-    //     // Highlight the first item if a gamepad is connected
-    //     if (currentIndex == -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
-    //         currentIndex = 0
-    //     }
-    // }
+        // Highlight the first item if a gamepad is connected
+        if (currentIndex == -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
+            currentIndex = 0
+        }
+    }
 
-    // StackView.onDeactivating: {
-    //     ComputerManager.computerAddCompleted.disconnect(addComplete)
-    // }
+    function onStackViewDeactivating() {
+        ComputerManager.computerAddCompleted.disconnect(addComplete)
+    }
+
+    Stack.onStatusChanged: {
+        if (Stack.status == Stack.Active) {
+            onStackViewActivated()
+        } else if (Stack.status == Stack.Deactivating) {
+            onStackViewDeactivating()
+        }
+    }
 
     function pairingComplete(error)
     {
@@ -186,52 +194,48 @@ GridView {
                 }
             }
         }
-          
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                if (model.online) {
-                    if (model.paired) {
-                        // go to game view
-                        var component = Qt.createComponent("AppView.qml")
-                        var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
-                        stackView.push(appView)
-                    }
-                    else {
-                        if (!model.busy) {
-                            var pin = computerModel.generatePinString()
 
-                            // Kick off pairing in the background
-                            computerModel.pairComputer(index, pin)
-
-                            // Display the pairing dialog
-                            pairDialog.pin = pin
-                            pairDialog.open()
-                        }
-                        else {
-                            // cannot pair while something is streaming or attempting to pair
-                            errorDialog.text = qsTr("You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.")
-                            errorDialog.helpText = ""
-                            errorDialog.open()
-                        }
-                    }
-                } else if (!model.online) {
-                    // Using open() here because it may be activated by keyboard
-                    pcContextMenu.open()
-                }
-            }
-
-            onPressAndHold: {
-                // popup() ensures the menu appears under the mouse cursor
-                if (pcContextMenu.popup) {
-                    pcContextMenu.popup()
+        onClicked: {
+            if (model.online) {
+                if (model.paired) {
+                    // go to game view
+                    var component = Qt.createComponent("AppView.qml")
+                    var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
+                    stackView.push(appView)
                 }
                 else {
-                    // Qt 5.9 doesn't have popup()
-                    pcContextMenu.open()
-                }
-            }
+                    if (!model.busy) {
+                        var pin = computerModel.generatePinString()
 
+                        // Kick off pairing in the background
+                        computerModel.pairComputer(index, pin)
+
+                        // Display the pairing dialog
+                        pairDialog.pin = pin
+                        pairDialog.open()
+                    }
+                    else {
+                        // cannot pair while something is streaming or attempting to pair
+                        errorDialog.text = qsTr("You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.")
+                        errorDialog.helpText = ""
+                        errorDialog.open()
+                    }
+                }
+            } else if (!model.online) {
+                // Using open() here because it may be activated by keyboard
+                pcContextMenu.open()
+            }
+        }
+
+        onPressAndHold: {
+            // popup() ensures the menu appears under the mouse cursor
+            if (pcContextMenu.popup) {
+                pcContextMenu.popup()
+            }
+            else {
+                // Qt 5.9 doesn't have popup()
+                pcContextMenu.open()
+            }
         }
     }
         

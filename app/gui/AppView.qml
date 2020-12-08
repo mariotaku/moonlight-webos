@@ -76,6 +76,35 @@ GridView {
             // ToolTip.timeout: 5000
             // ToolTip.visible: (parent.hovered || parent.highlighted) && (!appNameText.visible || appNameText.truncated)
         }
+        
+        function launchOrResumeSelectedApp(quitExistingApp)
+        {
+            var runningId = appModel.getRunningAppId()
+            if (runningId !== 0 && runningId !== model.appid) {
+                if (quitExistingApp) {
+                    quitAppDialog.appName = appModel.getRunningAppName()
+                    quitAppDialog.segueToStream = true
+                    quitAppDialog.nextAppName = model.name
+                    quitAppDialog.nextAppIndex = index
+                    quitAppDialog.open()
+                }
 
+                return
+            }
+
+            var component = Qt.createComponent("StreamSegue.qml")
+            var segue = component.createObject(stackView, {"appName": model.name, "session": appModel.createSessionForApp(index)})
+            stackView.push(segue)
+        }
+
+        onClicked: {
+            // Only allow clicking on the box art for non-running games.
+            // For running games, buttons will appear to resume or quit which
+            // will handle starting the game and clicks on the box art will
+            // be ignored.
+            if (!model.running) {
+                launchOrResumeSelectedApp(true)
+            }
+        }
     }
 }

@@ -27,10 +27,11 @@ import ComputerManager 1.0
 WebOSWindow {
     property bool pollingActive: false
 
-    id: root
+    id: window
     visible: true
     width: 1920
     height: 1080
+
     title: "Moonlight"
     color: "black"
     keyMask: WebOSWindow.KeyMaskBack | keyMask
@@ -89,21 +90,20 @@ WebOSWindow {
 
             Keys.onPressed: {
                 if (event.key == WebOS.Key_webOS_Back) {
-                    root.navigateUp()
+                    window.navigateUp()
                 }
             }
 
             Keys.onEscapePressed: {
-                root.navigateUp()
+                window.navigateUp()
             }
             
             Keys.onBackPressed: {
-                root.navigateUp()
+                window.navigateUp()
             }
 
         }
     }
-    
 
     // This timer keeps us polling for 5 minutes of inactivity
     // to allow the user to work with Moonlight on a second display
@@ -160,6 +160,8 @@ WebOSWindow {
             inactivityTimer.restart()
         }
     }
+
+    property bool initialized: false
 
     function navigateUp() {
         if (stackView.depth > 1) {

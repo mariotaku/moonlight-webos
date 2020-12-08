@@ -5,6 +5,9 @@ Item {
 
     // highlighted: grid.activeFocus && grid.currentItem === this
 
+    signal clicked(var mouse)
+    signal pressAndHold(var mouse)
+
     Keys.onLeftPressed: {
         grid.moveCurrentIndexLeft()
     }
@@ -19,5 +22,17 @@ Item {
     }
     Keys.onReturnPressed: {
         clicked()
+    }
+
+    MouseArea {
+        anchors.fill: parent
+
+        onClicked: {
+            parent.clicked(mouse)
+        }
+
+        onPressAndHold: {
+            parent.pressAndHold(mouse)
+        }
     }
 }
