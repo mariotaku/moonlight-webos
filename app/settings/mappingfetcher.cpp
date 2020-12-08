@@ -7,12 +7,14 @@ MappingFetcher::MappingFetcher(QObject *parent) :
     QObject(parent),
     m_Nam(this)
 {
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 7, 0)
     // Never communicate over HTTP
     m_Nam.setStrictTransportSecurityEnabled(true);
 
     // Allow HTTP redirects
     m_Nam.setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
-
+#endif
     connect(&m_Nam, SIGNAL(finished(QNetworkReply*)),
             this, SLOT(handleMappingListFetched(QNetworkReply*)));
 }
@@ -32,7 +34,7 @@ void MappingFetcher::start()
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
-#else
+#elif QT_VERSION >= QT_VERSION_CHECK(5, 7, 0)
     request.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
 #endif
 

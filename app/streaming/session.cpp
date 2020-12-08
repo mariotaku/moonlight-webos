@@ -15,6 +15,10 @@
 #include "video/slvid.h"
 #endif
 
+#ifdef Q_OS_WEBOS
+#include "video/webos.h"
+#endif
+
 #ifdef Q_OS_WIN32
 // Scaling the icon down on Win32 looks dreadful, so render at lower res
 #define ICON_SIZE 32
@@ -174,11 +178,184 @@ void Session::clConnectionStatusUpdate(int connectionStatus)
     }
 }
 
-Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences) 
+bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
+                            SDL_Window* window, int videoFormat, int width, int height,
+                            int frameRate, bool enableVsync, bool enableFramePacing, bool testOnly, IVideoDecoder*& chosenDecoder)
 {
+    DECODER_PARAMETERS params;
 
+    params.width = width;
+    params.height = height;
+    params.frameRate = frameRate;
+    params.videoFormat = videoFormat;
+    params.window = window;
+    params.enableVsync = enableVsync;
+    params.enableFramePacing = enableFramePacing;
+    params.vds = vds;
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "V-sync %s",
+                enableVsync ? "enabled" : "disabled");
+
+#ifdef HAVE_SLVIDEO
+    chosenDecoder = new SLVideoDecoder(testOnly);
+    if (chosenDecoder->initialize(&params)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "SLVideo video decoder chosen");
+        return true;
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to load SLVideo decoder");
+        delete chosenDecoder;
+        chosenDecoder = nullptr;
+    }
+#endif
+
+#ifdef HAVE_FFMPEG
+    chosenDecoder = new FFmpegVideoDecoder(testOnly);
+    if (chosenDecoder->initialize(&params)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "FFmpeg-based video decoder chosen");
+        return true;
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to load FFmpeg decoder");
+        delete chosenDecoder;
+        chosenDecoder = nullptr;
+    }
+#endif
+
+#ifdef HAVE_WEBOS
+#endif
+
+#if !defined(HAVE_FFMPEG) && !defined(HAVE_SLVIDEO) && !defined(HAVE_WEBOS)
+#error No video decoding libraries available!
+#endif
+
+    // If we reach this, we didn't initialize any decoders successfully
+    return false;
 }
 
+int Session::drSetup(int videoFormat, int width, int height, int frameRate, void *, int)
+{
+    s_ActiveSession->m_ActiveVideoFormat = videoFormat;
+    s_ActiveSession->m_ActiveVideoWidth = width;
+    s_ActiveSession->m_ActiveVideoHeight = height;
+    s_ActiveSession->m_ActiveVideoFrameRate = frameRate;
+
+    // Defer decoder setup until we've started streaming so we
+    // don't have to hide and show the SDL window (which seems to
+    // cause pointer hiding to break on Windows).
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Video stream is %dx%dx%d (format 0x%x)",
+                width, height, frameRate, videoFormat);
+
+    return 0;
+}
+
+int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
+{
+    // Use a lock since we'll be yanking this decoder out
+    // from underneath the session when we initiate destruction.
+    // We need to destroy the decoder on the main thread to satisfy
+    // some API constraints (like DXVA2). If we can't acquire it,
+    // that means the decoder is about to be destroyed, so we can
+    // safely return DR_OK and wait for m_NeedsIdr to be set by
+    // the decoder reinitialization code.
+
+    if (SDL_AtomicTryLock(&s_ActiveSession->m_DecoderLock)) {
+        if (s_ActiveSession->m_NeedsIdr) {
+            // If we reset our decoder, we'll need to request an IDR frame
+            s_ActiveSession->m_NeedsIdr = false;
+            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+            return DR_NEED_IDR;
+        }
+
+        IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
+        if (decoder != nullptr) {
+            int ret = decoder->submitDecodeUnit(du);
+            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+            return ret;
+        }
+        else {
+            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+            return DR_OK;
+        }
+    }
+    else {
+        // Decoder is going away. Ignore anything coming in until
+        // the lock is released.
+        return DR_OK;
+    }
+}
+
+bool Session::isHardwareDecodeAvailable(SDL_Window* window,
+                                        StreamingPreferences::VideoDecoderSelection vds,
+                                        int videoFormat, int width, int height, int frameRate)
+{
+    IVideoDecoder* decoder;
+
+    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, true, decoder)) {
+        return false;
+    }
+
+    bool ret = decoder->isHardwareAccelerated();
+
+    delete decoder;
+
+    return ret;
+}
+
+bool Session::populateDecoderProperties(SDL_Window* window)
+{
+    IVideoDecoder* decoder;
+
+    if (!chooseDecoder(m_Preferences->videoDecoderSelection,
+                       window,
+                       m_StreamConfig.enableHdr ? VIDEO_FORMAT_H265_MAIN10 :
+                            (m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264),
+                       m_StreamConfig.width,
+                       m_StreamConfig.height,
+                       m_StreamConfig.fps,
+                       true, false, true, decoder)) {
+        return false;
+    }
+
+    m_VideoCallbacks.capabilities = decoder->getDecoderCapabilities();
+
+    m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
+
+    delete decoder;
+
+    return true;
+}
+
+Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
+    : m_Preferences(preferences ? preferences : new StreamingPreferences(this)),
+      m_Computer(computer),
+      m_App(app),
+      m_Window(nullptr),
+      m_VideoDecoder(nullptr),
+      m_DecoderLock(0),
+      m_NeedsIdr(false),
+      m_AudioDisabled(false),
+      m_DisplayOriginX(0),
+      m_DisplayOriginY(0),
+      m_PendingWindowedTransition(false),
+      m_UnexpectedTermination(true), // Failure prior to streaming is unexpected
+      m_InputHandler(nullptr),
+      m_InputHandlerLock(0),
+      m_MouseEmulationRefCount(0),
+      m_AsyncConnectionSuccess(false),
+      m_PortTestResults(0),
+      m_OpusDecoder(nullptr),
+      m_AudioRenderer(nullptr),
+      m_AudioSampleCount(0),
+      m_DropAudioEndTime(0)
+{
+}
 
 // NB: This may not get destroyed for a long time! Don't put any vital cleanup here.
 // Use Session::exec() or DeferredSessionCleanupTask instead.
@@ -352,6 +529,178 @@ bool Session::initialize()
     return true;
 }
 
+void Session::emitLaunchWarning(QString text)
+{
+    // Emit the warning to the UI
+    emit displayLaunchWarning(text);
+
+    // Wait a little bit so the user can actually read what we just said.
+    // This wait is a little longer than the actual toast timeout (3 seconds)
+    // to allow it to transition off the screen before continuing.
+    uint32_t start = SDL_GetTicks();
+    while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 3500)) {
+        // Pump the UI loop while we wait
+        SDL_Delay(5);
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+        QCoreApplication::sendPostedEvents();
+    }
+}
+
+bool Session::validateLaunch(SDL_Window* testWindow)
+{
+    QStringList warningList;
+
+    if (m_Preferences->absoluteMouseMode && !m_App.isAppCollectorGame) {
+        emitLaunchWarning(tr("Your selection to enable remote desktop mouse mode may cause problems in games."));
+    }
+
+    if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
+        if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR) {
+            emitLaunchWarning(tr("HDR is not supported with software decoding."));
+            m_StreamConfig.enableHdr = false;
+        }
+        else {
+            emitLaunchWarning(tr("Your settings selection to force software decoding may cause poor streaming performance."));
+        }
+    }
+
+    if (m_Preferences->unsupportedFps && m_StreamConfig.fps > 60) {
+        emitLaunchWarning(tr("Using unsupported FPS options may cause stuttering or lag."));
+
+        if (m_Preferences->enableVsync) {
+            emitLaunchWarning(tr("V-sync will be disabled when streaming at a higher frame rate than the display."));
+        }
+    }
+
+    if (m_StreamConfig.supportsHevc) {
+        bool hevcForced = m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
+                m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR;
+
+        if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
+                m_Preferences->videoCodecConfig != StreamingPreferences::VCC_AUTO && // Already checked in initialize()
+                !isHardwareDecodeAvailable(testWindow,
+                                           m_Preferences->videoDecoderSelection,
+                                           VIDEO_FORMAT_H265,
+                                           m_StreamConfig.width,
+                                           m_StreamConfig.height,
+                                           m_StreamConfig.fps)) {
+            if (hevcForced) {
+                emitLaunchWarning(tr("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance."));
+            }
+            else {
+                emitLaunchWarning(tr("This PC's GPU doesn't support HEVC decoding."));
+                m_StreamConfig.supportsHevc = false;
+            }
+        }
+
+        if (hevcForced) {
+            if (m_Computer->maxLumaPixelsHEVC == 0) {
+                emitLaunchWarning(tr("Your host PC GPU doesn't support HEVC. "
+                                     "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming."));
+
+                // Moonlight-common-c will handle this case already, but we want
+                // to set this explicitly here so we can do our hardware acceleration
+                // check below.
+                m_StreamConfig.supportsHevc = false;
+            }
+        }
+    }
+
+    if (m_StreamConfig.enableHdr) {
+        // Turn HDR back off unless all criteria are met.
+        m_StreamConfig.enableHdr = false;
+
+        // Check that the app supports HDR
+        if (!m_App.hdrSupported) {
+            emitLaunchWarning(tr("%1 doesn't support HDR10.").arg(m_App.name));
+        }
+        // Check that the server GPU supports HDR
+        else if (!(m_Computer->serverCodecModeSupport & 0x200)) {
+            emitLaunchWarning(tr("Your host PC GPU doesn't support HDR streaming. "
+                                 "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming."));
+        }
+        else if (!isHardwareDecodeAvailable(testWindow,
+                                            m_Preferences->videoDecoderSelection,
+                                            VIDEO_FORMAT_H265_MAIN10,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height,
+                                            m_StreamConfig.fps)) {
+            emitLaunchWarning(tr("This PC's GPU doesn't support HEVC Main10 decoding for HDR streaming."));
+        }
+        else {
+            // TODO: Also validate display capabilites
+
+            // Validation successful so HDR is good to go
+            m_StreamConfig.enableHdr = true;
+        }
+    }
+
+    if (m_StreamConfig.width >= 3840) {
+        // Only allow 4K on GFE 3.x+
+        if (m_Computer->gfeVersion.isEmpty() || m_Computer->gfeVersion.startsWith("2.")) {
+            emitLaunchWarning(tr("GeForce Experience 3.0 or higher is required for 4K streaming."));
+
+            m_StreamConfig.width = 1920;
+            m_StreamConfig.height = 1080;
+        }
+    }
+
+    // Test if audio works at the specified audio configuration
+    bool audioTestPassed = testAudio(m_StreamConfig.audioConfiguration);
+
+    // Gracefully degrade to stereo if surround sound doesn't work
+    if (!audioTestPassed && CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration) > 2) {
+        audioTestPassed = testAudio(AUDIO_CONFIGURATION_STEREO);
+        if (audioTestPassed) {
+            m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
+            emitLaunchWarning(tr("Your selected surround sound setting is not supported by the current audio device."));
+        }
+    }
+
+    // If nothing worked, warn the user that audio will not work
+    m_AudioDisabled = !audioTestPassed;
+    if (m_AudioDisabled) {
+        emitLaunchWarning(tr("Failed to open audio device. Audio will be unavailable during this session."));
+    }
+
+    // Check for unmapped gamepads
+    if (!SdlInputHandler::getUnmappedGamepads().isEmpty()) {
+        emitLaunchWarning(tr("An attached gamepad has no mapping and won't be usable. Visit the Moonlight help to resolve this."));
+    }
+
+    // NVENC will fail to initialize when using dimensions over 4096 and H.264.
+    if (m_StreamConfig.width > 4096 || m_StreamConfig.height > 4096) {
+        if (m_Computer->maxLumaPixelsHEVC == 0) {
+            emit displayLaunchError(tr("Your host PC's GPU doesn't support streaming video resolutions over 4K."));
+            return false;
+        }
+        else if (!m_StreamConfig.supportsHevc) {
+            emit displayLaunchError(tr("Video resolutions over 4K are only supported by the HEVC codec."));
+            return false;
+        }
+    }
+
+    if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_HARDWARE &&
+            !m_StreamConfig.enableHdr && // HEVC Main10 was already checked for hardware decode support above
+            !isHardwareDecodeAvailable(testWindow,
+                                       m_Preferences->videoDecoderSelection,
+                                       m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
+                                       m_StreamConfig.width,
+                                       m_StreamConfig.height,
+                                       m_StreamConfig.fps)) {
+        if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_AUTO) {
+            emit displayLaunchError(tr("Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC's GPU."));
+        }
+        else {
+            emit displayLaunchError(tr("Your codec selection and force hardware decoding setting are not compatible. This PC's GPU lacks support for decoding your chosen codec."));
+        }
+
+        // Fail the launch, because we won't manage to get a decoder for the actual stream
+        return false;
+    }
+
+    return true;
+}
 
 class DeferredSessionCleanupTask : public QRunnable
 {
@@ -548,6 +897,34 @@ void Session::updateOptimalWindowDisplayMode()
     }
 
     SDL_SetWindowDisplayMode(m_Window, &bestMode);
+}
+
+void Session::toggleFullscreen()
+{
+    bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
+
+    if (fullScreen) {
+        if (m_FullScreenFlag == SDL_WINDOW_FULLSCREEN && m_InputHandler->isCaptureActive()) {
+            // Confine the cursor to the window if we're capturing input
+            SDL_SetWindowGrab(m_Window, SDL_TRUE);
+        }
+
+#if SDL_VERSION_ATLEAST(2, 0, 5)
+        SDL_SetWindowResizable(m_Window, SDL_FALSE);
+#endif
+        SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
+    }
+    else {
+        // Unconfine the cursor
+        SDL_SetWindowGrab(m_Window, SDL_FALSE);
+
+        SDL_SetWindowFullscreen(m_Window, 0);
+#if SDL_VERSION_ATLEAST(2, 0, 5)
+        SDL_SetWindowResizable(m_Window, SDL_TRUE);
+#endif
+        // Reposition the window when the resize is complete
+        m_PendingWindowedTransition = true;
+    }
 }
 
 void Session::notifyMouseEmulationMode(bool enabled)
