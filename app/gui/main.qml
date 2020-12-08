@@ -16,6 +16,7 @@
 
 import QtQuick 2.4
 import QtQuick.Controls 1.4
+import QtQuick.Layouts 1.1
 
 import WebOS.Global 1.0
 import Eos.Window 0.1
@@ -37,35 +38,72 @@ WebOSWindow {
     Component.onCompleted: {
         windowProperties["_WEBOS_ACCESS_POLICY_KEYS_BACK"] = "true"
     }
-    
-    StackView {
-        id: stackView
-        initialItem: initialView
+
+    ColumnLayout {
         anchors.fill: parent
-        focus: true
 
-        onCurrentItemChanged: {
-            // Ensure focus travels to the next view when going back
-            if (currentItem) {
-                currentItem.forceActiveFocus()
+        Header {
+            id: pageHeader
+            Layout.fillWidth: true
+            headerText: "Moonlight"
+
+            RowLayout {   
+                anchors {
+                    right: parent.right
+                    bottom: parent.bottom
+                    rightMargin: 10
+                    bottomMargin: 10
+                }                 
+
+                Button {
+                    id: addDevice
+                    text: "Add device"
+                    // shortcut: WebOS.Key_webOS_Blue
+                }
+                Button {
+                    id: help
+                    text: "Help"
+                    // shortcut: WebOS.Key_webOS_Green
+                }
+                Button {
+                    id: settings
+                    text: "Settings"
+                    // shortcut: WebOS.Key_webOS_Yellow
+                }
             }
-        }
-
-        Keys.onPressed: {
-            if (event.key == WebOS.Key_webOS_Back) {
-                root.navigateUp()
-            }
-        }
-
-        Keys.onEscapePressed: {
-            root.navigateUp()
         }
         
-        Keys.onBackPressed: {
-            root.navigateUp()
-        }
+        StackView {
+            id: stackView
+            initialItem: initialView
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            focus: true
 
+            onCurrentItemChanged: {
+                // Ensure focus travels to the next view when going back
+                if (currentItem) {
+                    currentItem.forceActiveFocus()
+                }
+            }
+
+            Keys.onPressed: {
+                if (event.key == WebOS.Key_webOS_Back) {
+                    root.navigateUp()
+                }
+            }
+
+            Keys.onEscapePressed: {
+                root.navigateUp()
+            }
+            
+            Keys.onBackPressed: {
+                root.navigateUp()
+            }
+
+        }
     }
+    
 
     // This timer keeps us polling for 5 minutes of inactivity
     // to allow the user to work with Moonlight on a second display

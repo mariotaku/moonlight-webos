@@ -33,6 +33,7 @@ set(EXECUTABLE_NAME "moonlight")
 
 # Update with `find app/ -name '*.cpp' -printf '    "%p"\n' | grep -vFf app/unsupported-src.list`
 add_executable(${EXECUTABLE_NAME} 
+    "app/backend/boxartmanager.cpp"
     "app/backend/computermanager.cpp"
     "app/backend/identitymanager.cpp"
     "app/backend/nvapp.cpp"
@@ -40,8 +41,10 @@ add_executable(${EXECUTABLE_NAME}
     "app/backend/nvhttp.cpp"
     "app/backend/nvpairingmanager.cpp"
     "app/controller/streaming.cpp"
+    "app/gui/appmodel.cpp"
     "app/gui/computermodel.cpp"
     "app/main.cpp"
+    "app/path.cpp"
     "app/settings/streamingpreferences.cpp"
     "app/streaming/session.cpp"
     "app/wm.cpp"
