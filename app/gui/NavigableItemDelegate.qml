@@ -21,7 +21,7 @@ Item {
         grid.moveCurrentIndexUp()
     }
     Keys.onReturnPressed: {
-        clicked()
+        clicked(null)
     }
 
     MouseArea {

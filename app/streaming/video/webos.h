@@ -20,4 +20,6 @@ public:
     virtual void renderFrameOnMainThread() override;
 private:
     bool m_TestOnly;
+    
+    SDL_Renderer* m_Renderer;
 };
