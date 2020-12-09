@@ -4,8 +4,6 @@
 
 #include "decoder.h"
 
-#define HAVE_WEBOS
-
 class WebOSVideoDecoder : public IVideoDecoder {
 public:
     WebOSVideoDecoder(bool testOnly);

@@ -7,3 +7,6 @@
 [submodule "opus"]
 	path = opus
 	url = https://gitlab.xiph.org/xiph/opus.git
+[submodule "h264bitstream/h264bitstream"]
+	path = h264bitstream/h264bitstream
+	url = https://github.com/aizvorski/h264bitstream.git

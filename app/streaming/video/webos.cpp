@@ -119,7 +119,13 @@ QSize WebOSVideoDecoder::getDecoderMaxResolution()
 int WebOSVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) 
 {
     SDL_assert(!m_TestOnly);
+    
+    SDL_Event event;
 
+    // For main thread rendering, we'll push an event to trigger a callback
+    event.type = SDL_USEREVENT;
+    event.user.code = SDL_CODE_FRAME_READY;
+    SDL_PushEvent(&event);
     return DR_OK;
 }
 

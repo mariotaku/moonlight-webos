@@ -15,7 +15,7 @@
 #include "video/slvid.h"
 #endif
 
-#ifdef Q_OS_WEBOS
+#ifdef HAVE_WEBOS
 #include "video/webos.h"
 #endif
 
