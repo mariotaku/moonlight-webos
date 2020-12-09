@@ -45,12 +45,8 @@
 
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
     return m_HwDecodeCfg != nullptr ||
             (m_VideoDecoderCtx->codec->capabilities & AV_CODEC_CAP_HARDWARE) != 0;
-#else
-    return false;
-#endif
 }
 
 bool FFmpegVideoDecoder::isAlwaysFullScreen()
@@ -96,7 +92,6 @@ enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
     FFmpegVideoDecoder* decoder = (FFmpegVideoDecoder*)context->opaque;
     const enum AVPixelFormat *p;
 
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
     for (p = pixFmts; *p != -1; p++) {
         // Only match our hardware decoding codec or preferred SW pixel
         // format (if not using hardware decoding). It's crucial
@@ -117,22 +112,13 @@ enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
             }
         }
     }
-#else
-    for (p = pixFmts; *p != -1; p++) {
-        if (decoder->m_FrontendRenderer->isPixelFormatSupported(decoder->m_VideoFormat, *p)) {
-            return *p;
-        }
-    }
-#endif
     return AV_PIX_FMT_NONE;
 }
 
 FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
     : m_VideoDecoderCtx(nullptr),
       m_DecodeBuffer(1024 * 1024, 0),
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
       m_HwDecodeCfg(nullptr),
-#endif
       m_BackendRenderer(nullptr),
       m_FrontendRenderer(nullptr),
       m_ConsecutiveFailedDecodes(0),
@@ -511,7 +497,6 @@ void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
     }
 }
 
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
 IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass)
 {
     if (!(hwDecodeCfg->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
@@ -558,21 +543,15 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
         return nullptr;
     }
 }
-#endif
 
 bool FFmpegVideoDecoder::tryInitializeRenderer(AVCodec* decoder,
-                                               PDECODER_PARAMETERS params,         
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
+                                               PDECODER_PARAMETERS params,
                                                const AVCodecHWConfig* hwConfig,
-#else
                                                const void* hwConfig,
-#endif
                                                std::function<IFFmpegRenderer*()> createRendererFunc)
 {
     m_BackendRenderer = createRendererFunc();
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
     m_HwDecodeCfg = hwConfig;
-#endif
 
     if (m_BackendRenderer != nullptr &&
             m_BackendRenderer->initialize(params) &&
@@ -686,7 +665,6 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
     }
     // Look for a hardware decoder first unless software-only
     if (params->vds != StreamingPreferences::VDS_FORCE_SOFTWARE) {
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
         // Look for the first matching hwaccel hardware decoder (pass 0)
         for (int i = 0;; i++) {
             const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
@@ -701,7 +679,6 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 return true;
             }
         }
-#endif
         // Continue with special non-hwaccel hardware decoders
 
 #ifdef HAVE_MMAL
@@ -772,7 +749,6 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
         }
 #endif
 
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
         // Look for the first matching hwaccel hardware decoder (pass 1)
         // This picks up "second-tier" hwaccels like CUDA.
         for (int i = 0;; i++) {
@@ -788,7 +764,6 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 return true;
             }
         }
-#endif
     }
 
     // Fallback to software if no matching hardware decoder was found

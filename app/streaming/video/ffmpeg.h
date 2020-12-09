@@ -38,16 +38,10 @@ private:
 
     bool tryInitializeRenderer(AVCodec* decoder,
                                PDECODER_PARAMETERS params,
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
                                const AVCodecHWConfig* hwConfig,
-#else
-                               const void* hwConfig,
-#endif
                                std::function<IFFmpegRenderer*()> createRendererFunc);
 
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
     static IFFmpegRenderer* createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass);
-#endif
 
     void reset();
 
@@ -60,9 +54,7 @@ private:
     AVPacket m_Pkt;
     AVCodecContext* m_VideoDecoderCtx;
     QByteArray m_DecodeBuffer;
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
     const AVCodecHWConfig* m_HwDecodeCfg;
-#endif
     IFFmpegRenderer* m_BackendRenderer;
     IFFmpegRenderer* m_FrontendRenderer;
     int m_ConsecutiveFailedDecodes;

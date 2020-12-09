@@ -1,6 +1,8 @@
 #!/bin/sh
 
-CMAKE_SOURCE_DIR=$1
+if [ -d ./webos-metadata ]; then
+CMAKE_SOURCE_DIR=./
+fi
 
 if [ -z $CMAKE_SOURCE_DIR ]; then
   echo 'Source dir not specified!'
@@ -14,4 +16,8 @@ EXE_NAME=$(jq -r .main ${APP_META_DIR}/appinfo.json)
 
 DEVICE=hometv-nopass
 
-ssh $DEVICE "killall ${EXE_NAME}; apps/usr/palm/applications/${PKG_NAME}/${EXE_NAME}"
+ssh $DEVICE << EOF
+killall ${EXE_NAME}
+export APPID=${PKG_NAME}
+apps/usr/palm/applications/${PKG_NAME}/${EXE_NAME} $@
+EOF

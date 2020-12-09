@@ -303,6 +303,25 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     }
 }
 
+void Session::getDecoderInfo(SDL_Window* window,
+                             bool& isHardwareAccelerated, bool& isFullScreenOnly, QSize& maxResolution)
+{
+    IVideoDecoder* decoder;
+
+    if (!chooseDecoder(StreamingPreferences::VDS_AUTO,
+                       window, VIDEO_FORMAT_H264, 1920, 1080, 60,
+                       true, false, true, decoder)) {
+        isHardwareAccelerated = isFullScreenOnly = false;
+        return;
+    }
+
+    isHardwareAccelerated = decoder->isHardwareAccelerated();
+    isFullScreenOnly = decoder->isAlwaysFullScreen();
+    maxResolution = decoder->getDecoderMaxResolution();
+
+    delete decoder;
+}
+
 bool Session::isHardwareDecodeAvailable(SDL_Window* window,
                                         StreamingPreferences::VideoDecoderSelection vds,
                                         int videoFormat, int width, int height, int frameRate)

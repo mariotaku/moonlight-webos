@@ -265,7 +265,6 @@ void SdlRenderer::renderFrame(AVFrame* frame)
     }
 
     if (frame->hw_frames_ctx != nullptr) {
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
         // If we are acting as the frontend for a hardware
         // accelerated decoder, we'll need to read the frame
         // back to render it.
@@ -303,8 +302,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
         // be set *after* calling av_hwframe_transfer_data().
         swFrame->colorspace = frame->colorspace;
 
-        frame = swFrame;  
-#endif
+        frame = swFrame;
     }
     if (m_Texture == nullptr) {
         Uint32 sdlFormat;
@@ -326,7 +324,6 @@ void SdlRenderer::renderFrame(AVFrame* frame)
             goto Exit;
         }
 
-#if (LIBAVCODEC_VERSION_MAJOR >= 58)
         switch (frame->colorspace)
         {
         case AVCOL_SPC_BT709:
@@ -338,7 +335,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
             SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT601);
             break;
         }
-#endif
+
         m_Texture = SDL_CreateTexture(m_Renderer,
                                       sdlFormat,
                                       SDL_TEXTUREACCESS_STREAMING,

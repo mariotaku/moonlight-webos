@@ -45,7 +45,7 @@ Item {
         // This toast appears for 3 seconds, just shorter than how long
         // Session will wait for it to be displayed. This gives it time
         // to transition to invisible before continuing.
-        var toast = Qt.createQmlObject('import QtQuick.Controls 2.2; ToolTip {}', parent, '')
+        var toast = Qt.createQmlObject('import QtQuick.Controls 1.4; ToolTip {}', parent, '')
         toast.text = text
         toast.timeout = 3000
         toast.visible = true

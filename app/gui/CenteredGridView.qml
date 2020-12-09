@@ -1,5 +1,5 @@
 import QtQuick 2.4
-import QtQuick.Controls 2.2
+import QtQuick.Controls 1.4
 
 GridView {
     // Detect Qt 5.11 or earlier using presence of synchronousDrag.

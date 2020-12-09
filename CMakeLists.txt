@@ -26,9 +26,6 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED sdl2)
 pkg_check_modules(SDL2TTF REQUIRED SDL2_ttf)
 pkg_check_modules(OPENSSL REQUIRED openssl)
-pkg_check_modules(LAVC REQUIRED libavcodec)
-pkg_check_modules(LAVF REQUIRED libavformat)
-pkg_check_modules(LAVU REQUIRED libavutil)
 
 # these calls create special `PkgConfig::<MODULE>` variables
 find_package(Qt5 COMPONENTS Core Multimedia Quick REQUIRED)
@@ -36,27 +33,22 @@ find_package(Qt5 COMPONENTS Core Multimedia Quick REQUIRED)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/pkg_$ENV{ARCH}/")
 set(EXECUTABLE_NAME "moonlight")
 
-# Update with `find app/ -name '*.cpp' -printf '    "app/%P"\n' | grep -vFf app/unsupported-src.list`
-add_executable(${EXECUTABLE_NAME} 
-    "app/backend/boxartmanager.cpp"
-    "app/backend/computermanager.cpp"
-    "app/backend/identitymanager.cpp"
+set(BASE_SRC
     "app/backend/nvapp.cpp"
+    "app/main.cpp"
+    "app/backend/computerseeker.cpp"
+    "app/backend/identitymanager.cpp"
     "app/backend/nvcomputer.cpp"
     "app/backend/nvhttp.cpp"
     "app/backend/nvpairingmanager.cpp"
+    "app/backend/computermanager.cpp"
+    "app/backend/boxartmanager.cpp"
     "app/backend/richpresencemanager.cpp"
-    "app/controller/streaming.cpp"
-    "app/gui/appmodel.cpp"
-    "app/gui/computermodel.cpp"
-    "app/gui/sdlgamepadkeynavigation.cpp"
-    "app/main.cpp"
-    "app/path.cpp"
+    "app/cli/commandlineparser.cpp"
+    "app/cli/quitstream.cpp"
+    "app/cli/startstream.cpp"
     "app/settings/mappingfetcher.cpp"
-    "app/settings/mappingmanager.cpp"
     "app/settings/streamingpreferences.cpp"
-    "app/streaming/audio/audio.cpp"
-    "app/streaming/audio/renderers/sdlaud.cpp"
     "app/streaming/input/abstouch.cpp"
     "app/streaming/input/gamepad.cpp"
     "app/streaming/input/input.cpp"
@@ -64,17 +56,25 @@ add_executable(${EXECUTABLE_NAME}
     "app/streaming/input/mouse.cpp"
     "app/streaming/input/reltouch.cpp"
     "app/streaming/session.cpp"
+    "app/streaming/audio/audio.cpp"
+    "app/streaming/audio/renderers/sdlaud.cpp"
+    "app/gui/computermodel.cpp"
+    "app/gui/appmodel.cpp"
     "app/streaming/streamutils.cpp"
-    "app/streaming/video/ffmpeg-renderers/pacer/nullthreadedvsyncsource.cpp"
-    "app/streaming/video/ffmpeg-renderers/pacer/pacer.cpp"
-    "app/streaming/video/ffmpeg-renderers/sdlvid.cpp"
-    "app/streaming/video/ffmpeg.cpp"
+    "app/backend/autoupdatechecker.cpp"
+    "app/path.cpp"
+    "app/settings/mappingmanager.cpp"
+    "app/gui/sdlgamepadkeynavigation.cpp"
     "app/streaming/video/overlaymanager.cpp"
-    "app/streaming/video/webos.cpp"
+    "app/backend/systemproperties.cpp"
     "app/wm.cpp"
-    "app/qml.qrc"
-    "app/resources.qrc"
 )
+
+set(WEBOS_SRC
+    "app/streaming/video/webos.cpp"
+)
+
+add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${WEBOS_SRC})
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
     CXX_STANDARD          11
@@ -86,8 +86,8 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 target_include_directories(${EXECUTABLE_NAME} PRIVATE "app")
 target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_FFMPEG)
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_WEBOS)
+target_compile_definitions(${EXECUTABLE_NAME} PRIVATE VERSION_STR="0.0.1")
 
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE
 Threads::Threads
@@ -95,7 +95,6 @@ Threads::Threads
  ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARIES} # SDL libraries
  ${OPENSSL_LIBRARIES}
  ${OPENSSL_LIBRARIES}
- ${LAVC_LIBRARIES} ${LAVF_LIBRARIES} ${LAVU_LIBRARIES}
  -pthread # Must be some way to fix that
  moonlight-common-c qmdnsengine opus h264bitstream
 )
@@ -108,4 +107,4 @@ add_custom_target("device-install" COMMAND ${CMAKE_SOURCE_DIR}/scripts/device-in
     DEPENDS "webos-package"
 )
 
-add_custom_target("device-launch" COMMAND ${CMAKE_SOURCE_DIR}/scripts/device-launch.sh ${CMAKE_SOURCE_DIR})
+add_custom_target("device-launch" COMMAND CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/scripts/device-launch.sh)

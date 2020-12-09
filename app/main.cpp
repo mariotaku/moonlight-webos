@@ -10,10 +10,25 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
+#ifdef HAVE_FFMPEG
+#include "streaming/video/ffmpeg.h"
+#endif
+
+#if defined(Q_OS_WIN32)
+#include "antihookingprotection.h"
+#elif defined(Q_OS_LINUX)
+#include <openssl/ssl.h>
+#endif
+
+#include "cli/quitstream.h"
+#include "cli/startstream.h"
+#include "cli/commandlineparser.h"
 #include "path.h"
+#include "utils.h"
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
 #include "backend/computermanager.h"
+#include "streaming/session.h"
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
 
@@ -52,11 +67,13 @@ int main(int argc, char *argv[])
     // initializing the SDL video subsystem to have any effect.
     SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
 
+#if SDL_VERSION_ATLEAST(2, 0, 8)
     // For SDL backends that support it, use double buffering instead of triple buffering
     // to save a frame of latency. This doesn't matter for MMAL or DRM renderers since they
     // are drawing directly to the screen without involving SDL, but it may matter for other
     // future KMSDRM platforms that use SDL for rendering.
-    SDL_SetHint("SDL_VIDEO_DOUBLE_BUFFER", "1");
+    SDL_SetHint(SDL_HINT_VIDEO_DOUBLE_BUFFER, "1");
+#endif
 
     if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -130,11 +147,42 @@ int main(int argc, char *argv[])
     IdentityManager::get();
 
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("initialView", "qrc:/gui/PcView.qml");
+    QString initialView;
+
+    GlobalCommandLineParser parser;
+    switch (parser.parse(app.arguments())) {
+    case GlobalCommandLineParser::NormalStartRequested:
+        initialView = "qrc:/gui/PcView.qml";
+        break;
+    case GlobalCommandLineParser::StreamRequested:
+        {
+            initialView = "qrc:/gui/CliStartStreamSegue.qml";
+            StreamingPreferences* preferences = new StreamingPreferences(&app);
+            StreamCommandLineParser streamParser;
+            streamParser.parse(app.arguments(), preferences);
+            QString host    = streamParser.getHost();
+            QString appName = streamParser.getAppName();
+            auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
+            engine.rootContext()->setContextProperty("launcher", launcher);
+            break;
+        }
+    case GlobalCommandLineParser::QuitRequested:
+        {
+            initialView = "qrc:/gui/CliQuitStreamSegue.qml";
+            QuitCommandLineParser quitParser;
+            quitParser.parse(app.arguments());
+            auto launcher = new CliQuitStream::Launcher(quitParser.getHost(), &app);
+            engine.rootContext()->setContextProperty("launcher", launcher);
+            break;
+        }
+    }
+
+    engine.rootContext()->setContextProperty("initialView", initialView);
+
+    // Load the main.qml file
     engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
-
     int err = app.exec();
 
     // Give worker tasks time to properly exit. Fixes PendingQuitTask
