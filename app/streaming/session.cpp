@@ -926,9 +926,7 @@ void Session::toggleFullscreen()
             SDL_SetWindowGrab(m_Window, SDL_TRUE);
         }
 
-#if SDL_VERSION_ATLEAST(2, 0, 5)
         SDL_SetWindowResizable(m_Window, SDL_FALSE);
-#endif
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
     else {
@@ -936,9 +934,8 @@ void Session::toggleFullscreen()
         SDL_SetWindowGrab(m_Window, SDL_FALSE);
 
         SDL_SetWindowFullscreen(m_Window, 0);
-#if SDL_VERSION_ATLEAST(2, 0, 5)
         SDL_SetWindowResizable(m_Window, SDL_TRUE);
-#endif
+
         // Reposition the window when the resize is complete
         m_PendingWindowedTransition = true;
     }

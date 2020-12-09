@@ -10,7 +10,7 @@ import ComputerModel 1.0
 
 import ComputerManager 1.0
 import StreamingPreferences 1.0
-
+import SdlGamepadKeyNavigation 1.0
    
 GridView {
     property ComputerModel computerModel : createModel()
@@ -35,7 +35,7 @@ GridView {
         // This is a bit of a hack to do this here as opposed to main.qml, but
         // we need it enabled before calling getConnectedGamepads() and PcView
         // is never destroyed, so it should be okay.
-        // SdlGamepadKeyNavigation.enable()
+        SdlGamepadKeyNavigation.enable()
 
         // Highlight the first item if a gamepad is connected
         if (currentIndex == -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {

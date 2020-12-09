@@ -15,6 +15,7 @@
 #include "gui/appmodel.h"
 #include "backend/computermanager.h"
 #include "settings/streamingpreferences.h"
+#include "gui/sdlgamepadkeynavigation.h"
 
 int main(int argc, char *argv[])
 {
@@ -114,6 +115,11 @@ int main(int argc, char *argv[])
                                               [](QQmlEngine *, QJSEngine *) -> QObject * {
                                                   return new ComputerManager();
                                               });
+    qmlRegisterSingletonType<SdlGamepadKeyNavigation>("SdlGamepadKeyNavigation", 1, 0,
+                                                    "SdlGamepadKeyNavigation",
+                                                    [](QQmlEngine*, QJSEngine*) -> QObject* {
+                                                        return new SdlGamepadKeyNavigation();
+                                                    });
     qmlRegisterSingletonType<StreamingPreferences>("StreamingPreferences", 1, 0,
                                                    "StreamingPreferences",
                                                    [](QQmlEngine *, QJSEngine *) -> QObject * {

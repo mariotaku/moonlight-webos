@@ -49,6 +49,7 @@ add_executable(${EXECUTABLE_NAME}
     "app/controller/streaming.cpp"
     "app/gui/appmodel.cpp"
     "app/gui/computermodel.cpp"
+    "app/gui/sdlgamepadkeynavigation.cpp"
     "app/main.cpp"
     "app/path.cpp"
     "app/settings/mappingfetcher.cpp"

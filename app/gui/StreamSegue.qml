@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.4
 
-// import SdlGamepadKeyNavigation 1.0
+import SdlGamepadKeyNavigation 1.0
 import Session 1.0
 
 Item {
@@ -68,7 +68,7 @@ Item {
         }
 
         // Enable GUI gamepad usage now
-        // SdlGamepadKeyNavigation.enable()
+        SdlGamepadKeyNavigation.enable()
 
         if (quitAfter) {
             if (streamSegueErrorDialog.text) {
@@ -103,7 +103,7 @@ Item {
         // toolBar.visible = true
 
         // Enable GUI gamepad usage now
-        // SdlGamepadKeyNavigation.enable()
+        SdlGamepadKeyNavigation.enable()
     }
 
     function onStackViewActivated() {
@@ -158,7 +158,7 @@ Item {
             //                                       qsTr("Start+Select+L1+R1") : qsTr("Ctrl+Alt+Shift+Q"))
 
             // Stop GUI gamepad usage now
-            // SdlGamepadKeyNavigation.disable()
+            SdlGamepadKeyNavigation.disable()
 
             // Run the streaming session to completion
             session.exec(0, 0)

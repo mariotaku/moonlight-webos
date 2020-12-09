@@ -23,6 +23,7 @@ import Eos.Window 0.1
 import Eos.Controls 0.1
 
 import ComputerManager 1.0
+import SdlGamepadKeyNavigation 1.0
 
 WebOSWindow {
     property bool pollingActive: false
@@ -87,21 +88,20 @@ WebOSWindow {
                     currentItem.forceActiveFocus()
                 }
             }
-
-            Keys.onPressed: {
-                if (event.key == WebOS.Key_webOS_Back) {
-                    window.navigateUp()
-                }
-            }
-
-            Keys.onEscapePressed: {
+        }
+        
+        Keys.onPressed: {
+            if (event.key == WebOS.Key_webOS_Back) {
                 window.navigateUp()
             }
-            
-            Keys.onBackPressed: {
-                window.navigateUp()
-            }
+        }
 
+        Keys.onEscapePressed: {
+            window.navigateUp()
+        }
+        
+        Keys.onBackPressed: {
+            window.navigateUp()
         }
     }
 

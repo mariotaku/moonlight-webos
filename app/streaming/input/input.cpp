@@ -41,13 +41,11 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
                             prefs.absoluteMouseMode ? "1" : "0",
                             SDL_HINT_OVERRIDE);
 
-#if SDL_VERSION_ATLEAST(2, 0, 5)
     // Allow clicks to pass through to us when focusing the window. If we're in
     // absolute mouse mode, this will avoid the user having to click twice to
     // trigger a click on the host if the Moonlight window is not focused. In
     // relative mode, the click event will trigger the mouse to be recaptured.
     SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-#endif
 
 #if defined(Q_OS_DARWIN) && !SDL_VERSION_ATLEAST(2, 0, 10)
     // SDL 2.0.9 on macOS has a broken HIDAPI mapping for the older Xbox One S

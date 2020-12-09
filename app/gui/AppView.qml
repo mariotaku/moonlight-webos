@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.1
 
 import AppModel 1.0
 import ComputerManager 1.0
+import SdlGamepadKeyNavigation 1.0
 
 GridView {
     property int computerIndex
@@ -28,6 +29,42 @@ GridView {
         // We do this here instead of onActivated to avoid losing the user's
         // selection when backing out of a different page of the app.
         currentIndex = -1
+    }
+
+    function onStackViewActivated() {
+        appModel.computerLost.connect(computerLost)
+        activated = true
+
+        // Highlight the first item if a gamepad is connected
+        if (currentIndex == -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
+            currentIndex = 0
+        }
+
+        if (!showGames && !showHiddenGames) {
+            // Check if there's a direct launch app
+            var directLaunchAppIndex = model.getDirectLaunchAppIndex();
+            if (directLaunchAppIndex >= 0) {
+                // Start the direct launch app if nothing else is running
+                currentIndex = directLaunchAppIndex
+                currentItem.launchOrResumeSelectedApp(false)
+
+                // Set showGames so we will not loop when the stream ends
+                showGames = true
+            }
+        }
+    }
+
+    function onStackViewDeactivating() {
+        appModel.computerLost.disconnect(computerLost)
+        activated = false
+    }
+
+    Stack.onStatusChanged: {
+        if (Stack.status == Stack.Active) {
+            onStackViewActivated()
+        } else if (Stack.status == Stack.Deactivating) {
+            onStackViewDeactivating()
+        }
     }
 
     function createModel()
