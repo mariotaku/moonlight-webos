@@ -66,7 +66,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
 #endif
 
-#if SDL_VERSION_ATLEAST(2, 0, 5)
+#if SDL_VERSION_ATLEAST(2, 0, 6)
     m_OldIgnoreDevices = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES);
     m_OldIgnoreDevicesExcept = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT);
 #else
@@ -83,7 +83,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     streamIgnoreDevices += m_OldIgnoreDevices;
 
 
-#if SDL_VERSION_ATLEAST(2, 0, 5)
+#if SDL_VERSION_ATLEAST(2, 0, 6)
     // For SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES, we use the union of SDL_GAMECONTROLLER_IGNORE_DEVICES
     // and STREAM_GAMECONTROLLER_IGNORE_DEVICES while streaming. STREAM_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT
     // overrides SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT while streaming.
@@ -196,7 +196,7 @@ SdlInputHandler::~SdlInputHandler()
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");
 
 
-#if SDL_VERSION_ATLEAST(2, 0, 5)
+#if SDL_VERSION_ATLEAST(2, 0, 6)
     // Restore the ignored devices
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES, m_OldIgnoreDevices.toUtf8());
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT, m_OldIgnoreDevicesExcept.toUtf8());
