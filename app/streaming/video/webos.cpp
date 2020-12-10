@@ -3,15 +3,26 @@
 
 #include <QDebug>
 
+extern "C" {
+#include <gst/app/gstappsrc.h>
+}
+
+#define MAX_SPS_EXTRA_SIZE 16
+
 WebOSVideoDecoder::WebOSVideoDecoder(bool testOnly)
-    : m_Renderer(nullptr)
+    : m_Renderer(nullptr),
+      m_Pipeline(nullptr),
+      m_NeedsSpsFixup(false),
+      m_TestOnly(testOnly)
 {
     qDebug() << "webOS Video decoder";
 }
 
 WebOSVideoDecoder::~WebOSVideoDecoder()
 {
-
+    if (m_Pipeline != nullptr) {
+        gst_object_unref (m_Pipeline);
+    }
     if (m_Renderer != nullptr) {
         SDL_DestroyRenderer(m_Renderer);
     }
@@ -20,6 +31,31 @@ WebOSVideoDecoder::~WebOSVideoDecoder()
 bool WebOSVideoDecoder::initialize(PDECODER_PARAMETERS params) 
 {
     qDebug() << "WebOSVideoDecoder::initialize";
+
+    GstElement *pipeline, *source, *sink;
+    /* Create the elements */
+    pipeline = gst_parse_launch("appsrc name=src ! h264parse ! lxvideodec ! appsink name=sink emit-signals=true", NULL);
+    source = gst_bin_get_by_name(GST_BIN(pipeline), "src");
+    sink = gst_bin_get_by_name(GST_BIN(pipeline), "sink");
+
+    if (!pipeline || !source || !sink) {
+        g_printerr ("Not all elements could be created.\n");
+        return false;
+    }
+
+    GstCaps *srccaps;
+    srccaps = gst_caps_new_simple("video/x-h264", NULL);
+    gst_base_src_set_caps(GST_BASE_SRC(source), srccaps);
+
+    g_signal_connect(sink, "new-preroll", G_CALLBACK(gstSinkNewPreroll), this);
+    g_signal_connect(sink, "new-sample", G_CALLBACK(gstSinkNewSample), this);
+
+    gst_element_set_state(pipeline, GST_STATE_PLAYING);
+
+    m_Source = source;
+    m_Sink = sink;
+    m_Pipeline = pipeline;
+
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;
 
     if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
@@ -118,14 +154,38 @@ QSize WebOSVideoDecoder::getDecoderMaxResolution()
 
 int WebOSVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) 
 {
+    PLENTRY entry = du->bufferList;
+    GstFlowReturn err;
     SDL_assert(!m_TestOnly);
     
-    SDL_Event event;
 
-    // For main thread rendering, we'll push an event to trigger a callback
-    event.type = SDL_USEREVENT;
-    event.user.code = SDL_CODE_FRAME_READY;
-    SDL_PushEvent(&event);
+    int requiredBufferSize = du->fullLength;
+    if (du->frameType == FRAME_TYPE_IDR) {
+        // Add some extra space in case we need to do an SPS fixup
+        requiredBufferSize += MAX_SPS_EXTRA_SIZE;
+    }
+
+    GstBuffer * buf;
+    buf = gst_buffer_new_allocate(NULL, requiredBufferSize, NULL);
+
+    int offset = 0;
+    while (entry != nullptr) {
+        gst_buffer_fill(buf, offset, entry->data, entry->length);
+        offset += entry->length;
+        entry = entry->next;
+    }
+
+    if (du->frameType == FRAME_TYPE_IDR) {
+        GST_BUFFER_FLAG_UNSET(buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    }
+    else {
+        GST_BUFFER_FLAG_SET(buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    }
+    
+    err = gst_app_src_push_buffer(GST_APP_SRC(m_Source), buf);
+    if (err) {
+        qWarning("gst src push_buffer()=%d", err);
+    }
     return DR_OK;
 }
 
@@ -134,4 +194,27 @@ void WebOSVideoDecoder::renderFrameOnMainThread()
     SDL_SetRenderDrawColor(m_Renderer, 255, 0, 0, 255);
     SDL_RenderClear(m_Renderer);
     SDL_RenderPresent(m_Renderer);
+}
+
+GstFlowReturn WebOSVideoDecoder::gstSinkNewPreroll(GstElement *sink, gpointer self)
+{
+    GstSample *sample;
+    GstFlowReturn ret;
+    g_signal_emit_by_name(sink, "pull-preroll", &sample);
+    GstCaps *caps;
+    caps = gst_sample_get_caps(sample);
+    /* Free the sample now that we are done with it */
+    gst_sample_unref(sample);
+    return GST_FLOW_OK;
+}
+GstFlowReturn WebOSVideoDecoder::gstSinkNewSample(GstElement *sink, gpointer self)
+{
+    GstSample *sample;
+    GstFlowReturn ret;
+    g_signal_emit_by_name(sink, "pull-sample", &sample);
+    GstCaps *caps;
+    caps = gst_sample_get_caps(sample);
+    /* Free the sample now that we are done with it */
+    gst_sample_unref(sample);
+    return GST_FLOW_OK;
 }

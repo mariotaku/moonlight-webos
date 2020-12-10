@@ -26,6 +26,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED sdl2)
 pkg_check_modules(SDL2TTF REQUIRED SDL2_ttf)
 pkg_check_modules(OPENSSL REQUIRED openssl)
+pkg_check_modules(GST REQUIRED gstreamer-1.0 gstreamer-app-1.0)
 
 # these calls create special `PkgConfig::<MODULE>` variables
 find_package(Qt5 COMPONENTS Core Multimedia Quick REQUIRED)
@@ -70,11 +71,16 @@ set(BASE_SRC
     "app/wm.cpp"
 )
 
+set(QRC_SRC
+    "app/qml.qrc"
+    "app/resources.qrc"
+)
+
 set(WEBOS_SRC
     "app/streaming/video/webos.cpp"
 )
 
-add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${WEBOS_SRC})
+add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${QRC_SRC} ${WEBOS_SRC})
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
     CXX_STANDARD          11
@@ -85,18 +91,20 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE "app")
 target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
+target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${GST_INCLUDE_DIRS})
+
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_WEBOS)
+target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_GSTREAMER)
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE VERSION_STR="0.0.1")
 
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE
-Threads::Threads
+Threads::Threads pthread
  Qt5::Core Qt5::Multimedia Qt5::Quick Qt5::Network # QT libraries
  ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARIES} # SDL libraries
  ${OPENSSL_LIBRARIES}
- ${OPENSSL_LIBRARIES}
- -pthread # Must be some way to fix that
- moonlight-common-c qmdnsengine opus h264bitstream
+ ${GST_LIBRARIES}
+ moonlight-common-c qmdnsengine opus
 )
 
 add_custom_target("webos-package" COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${CMAKE_SOURCE_DIR}

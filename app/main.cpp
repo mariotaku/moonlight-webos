@@ -32,8 +32,17 @@
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
 
+#ifdef HAVE_GSTREAMER
+extern "C" {
+#include <gst/gst.h>
+}
+#endif
+
 int main(int argc, char *argv[])
 {
+    #ifdef HAVE_GSTREAMER
+    gst_init (&argc, &argv);
+    #endif
     SDL_SetMainReady();
 
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -147,35 +156,35 @@ int main(int argc, char *argv[])
     IdentityManager::get();
 
     QQmlApplicationEngine engine;
-    QString initialView;
+    QString initialView = "qrc:/gui/PcView.qml";
 
-    GlobalCommandLineParser parser;
-    switch (parser.parse(app.arguments())) {
-    case GlobalCommandLineParser::NormalStartRequested:
-        initialView = "qrc:/gui/PcView.qml";
-        break;
-    case GlobalCommandLineParser::StreamRequested:
-        {
-            initialView = "qrc:/gui/CliStartStreamSegue.qml";
-            StreamingPreferences* preferences = new StreamingPreferences(&app);
-            StreamCommandLineParser streamParser;
-            streamParser.parse(app.arguments(), preferences);
-            QString host    = streamParser.getHost();
-            QString appName = streamParser.getAppName();
-            auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
-            engine.rootContext()->setContextProperty("launcher", launcher);
-            break;
-        }
-    case GlobalCommandLineParser::QuitRequested:
-        {
-            initialView = "qrc:/gui/CliQuitStreamSegue.qml";
-            QuitCommandLineParser quitParser;
-            quitParser.parse(app.arguments());
-            auto launcher = new CliQuitStream::Launcher(quitParser.getHost(), &app);
-            engine.rootContext()->setContextProperty("launcher", launcher);
-            break;
-        }
-    }
+    // GlobalCommandLineParser parser;
+    // switch (parser.parse(app.arguments())) {
+    // case GlobalCommandLineParser::NormalStartRequested:
+    //     initialView = "qrc:/gui/PcView.qml";
+    //     break;
+    // case GlobalCommandLineParser::StreamRequested:
+    //     {
+    //         initialView = "qrc:/gui/CliStartStreamSegue.qml";
+    //         StreamingPreferences* preferences = new StreamingPreferences(&app);
+    //         StreamCommandLineParser streamParser;
+    //         streamParser.parse(app.arguments(), preferences);
+    //         QString host    = streamParser.getHost();
+    //         QString appName = streamParser.getAppName();
+    //         auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
+    //         engine.rootContext()->setContextProperty("launcher", launcher);
+    //         break;
+    //     }
+    // case GlobalCommandLineParser::QuitRequested:
+    //     {
+    //         initialView = "qrc:/gui/CliQuitStreamSegue.qml";
+    //         QuitCommandLineParser quitParser;
+    //         quitParser.parse(app.arguments());
+    //         auto launcher = new CliQuitStream::Launcher(quitParser.getHost(), &app);
+    //         engine.rootContext()->setContextProperty("launcher", launcher);
+    //         break;
+    //     }
+    // }
 
     engine.rootContext()->setContextProperty("initialView", initialView);
 

@@ -4,6 +4,10 @@
 
 #include "decoder.h"
 
+extern "C" {
+#include <gst/gst.h>
+}
+
 class WebOSVideoDecoder : public IVideoDecoder {
 public:
     WebOSVideoDecoder(bool testOnly);
@@ -17,7 +21,16 @@ public:
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;
     virtual void renderFrameOnMainThread() override;
 private:
-    bool m_TestOnly;
+
+    static GstFlowReturn gstSinkNewPreroll(GstElement *sink, gpointer self);
+    static GstFlowReturn gstSinkNewSample(GstElement *sink, gpointer self);
     
+    GstElement* m_Source;
+    GstElement* m_Sink;
+    GstElement* m_Pipeline;
+
     SDL_Renderer* m_Renderer;
+    
+    bool m_NeedsSpsFixup;
+    bool m_TestOnly;
 };
