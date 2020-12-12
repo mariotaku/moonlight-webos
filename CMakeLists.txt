@@ -15,18 +15,18 @@ project(moonlight-webos LANGUAGES C CXX)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)
 
-# option(BUILD_SHARED_LIBS "Build static libs instead of shared" OFF)
+option(BUILD_SHARED_LIBS "Build static libs instead of shared" OFF)
 add_subdirectory(moonlight-common-c)
 add_subdirectory(qmdnsengine)
 add_subdirectory(opus)
 add_subdirectory(h264bitstream)
+add_subdirectory(ffmpeg-prebuilt)
 
 # the `pkg_check_modules` function is created with this call
 find_package(PkgConfig REQUIRED) 
 pkg_check_modules(SDL2 REQUIRED sdl2)
 pkg_check_modules(SDL2TTF REQUIRED SDL2_ttf)
 pkg_check_modules(OPENSSL REQUIRED openssl)
-pkg_check_modules(GST REQUIRED gstreamer-1.0 gstreamer-app-1.0)
 
 # these calls create special `PkgConfig::<MODULE>` variables
 find_package(Qt5 COMPONENTS Core Multimedia Quick REQUIRED)
@@ -80,7 +80,14 @@ set(WEBOS_SRC
     "app/streaming/video/webos.cpp"
 )
 
-add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${QRC_SRC} ${WEBOS_SRC})
+set(FFMPEG_SRC
+    "app/streaming/video/ffmpeg-renderers/pacer/nullthreadedvsyncsource.cpp"
+    "app/streaming/video/ffmpeg-renderers/pacer/pacer.cpp"
+    "app/streaming/video/ffmpeg-renderers/sdlvid.cpp"
+    "app/streaming/video/ffmpeg.cpp"
+)
+
+add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${QRC_SRC} ${FFMPEG_SRC})
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
     CXX_STANDARD          11
@@ -94,8 +101,7 @@ target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS
 target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${GST_INCLUDE_DIRS})
 
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_WEBOS)
-target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_GSTREAMER)
+target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_FFMPEG)
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE VERSION_STR="0.0.1")
 
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE
@@ -103,8 +109,8 @@ Threads::Threads pthread
  Qt5::Core Qt5::Multimedia Qt5::Quick Qt5::Network # QT libraries
  ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARIES} # SDL libraries
  ${OPENSSL_LIBRARIES}
- ${GST_LIBRARIES}
  moonlight-common-c qmdnsengine opus
+ h264bitstream libavcodec libavutil
 )
 
 add_custom_target("webos-package" COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${CMAKE_SOURCE_DIR}

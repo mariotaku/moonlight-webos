@@ -529,11 +529,13 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
     // Second pass for our second-tier hwaccel implementations
     else if (pass == 1) {
         switch (hwDecodeCfg->device_type) {
+#ifdef HAVE_CUDA
         case AV_HWDEVICE_TYPE_CUDA:
             // CUDA should only be used if all other options fail, since it requires
             // read-back of frames. This should only be used for the NVIDIA+Wayland case
             // with VDPAU covering the NVIDIA+X11 scenario.
             return new CUDARenderer();
+#endif
         default:
             return nullptr;
         }
@@ -547,7 +549,6 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 bool FFmpegVideoDecoder::tryInitializeRenderer(AVCodec* decoder,
                                                PDECODER_PARAMETERS params,
                                                const AVCodecHWConfig* hwConfig,
-                                               const void* hwConfig,
                                                std::function<IFFmpegRenderer*()> createRendererFunc)
 {
     m_BackendRenderer = createRendererFunc();

@@ -324,6 +324,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
             goto Exit;
         }
 
+#if SDL_VERSION_ATLEAST(2,0,8)
         switch (frame->colorspace)
         {
         case AVCOL_SPC_BT709:
@@ -335,6 +336,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
             SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT601);
             break;
         }
+#endif
 
         m_Texture = SDL_CreateTexture(m_Renderer,
                                       sdlFormat,
