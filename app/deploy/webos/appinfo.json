@@ -1,0 +1,9 @@
+{
+  "id": "com.limelight.webos",
+  "version": "0.0.1",
+  "vendor": "Mariotaku Lee",
+  "type": "native",
+  "main": "moonlight",
+  "title": "Moonlight",
+  "icon": "icon.png"
+}

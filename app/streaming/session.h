@@ -20,9 +20,9 @@ class Session : public QObject
 
 public:
     explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
-
+#if QT_VERSION < QT_VERSION_CHECK(5, 11, 0)
     explicit Session(QObject *parent = nullptr);
-
+#endif
     virtual ~Session();
 
     Q_INVOKABLE void exec(int displayOriginX, int displayOriginY);

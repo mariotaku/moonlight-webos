@@ -7,9 +7,8 @@ if [ -z $CMAKE_SOURCE_DIR ]; then
   exit 1
 fi
 
-APP_META_DIR=$CMAKE_SOURCE_DIR/webos-metadata
+APP_META_DIR=$CMAKE_SOURCE_DIR/app/deploy/webos
 ASSETS_DIR=$CMAKE_SOURCE_DIR/assets
-SRC_DIR=$CMAKE_SOURCE_DIR/src
 
 if [ ! -f $APP_META_DIR/appinfo.json ]; then
   echo 'Application metadata is not present'

@@ -81,10 +81,11 @@ set(WEBOS_SRC
 )
 
 set(FFMPEG_SRC
-    "app/streaming/video/ffmpeg-renderers/pacer/nullthreadedvsyncsource.cpp"
-    "app/streaming/video/ffmpeg-renderers/pacer/pacer.cpp"
-    "app/streaming/video/ffmpeg-renderers/sdlvid.cpp"
     "app/streaming/video/ffmpeg.cpp"
+    "app/streaming/video/ffmpeg-renderers/sdlvid.cpp"
+    "app/streaming/video/ffmpeg-renderers/cuda.cpp"
+    "app/streaming/video/ffmpeg-renderers/pacer/pacer.cpp"
+    "app/streaming/video/ffmpeg-renderers/pacer/nullthreadedvsyncsource.cpp"
 )
 
 add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${QRC_SRC} ${FFMPEG_SRC})
@@ -113,7 +114,7 @@ Threads::Threads pthread
  h264bitstream libavcodec libavutil
 )
 
-add_custom_target("webos-package" COMMAND ${CMAKE_SOURCE_DIR}/scripts/package.sh ${CMAKE_SOURCE_DIR}
+add_custom_target("webos-package" COMMAND ${CMAKE_SOURCE_DIR}/scripts/build-webos-ipk.sh ${CMAKE_SOURCE_DIR}
     DEPENDS ${EXECUTABLE_NAME}
 )
 

@@ -112,6 +112,7 @@ enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
             }
         }
     }
+
     return AV_PIX_FMT_NONE;
 }
 
@@ -529,13 +530,11 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
     // Second pass for our second-tier hwaccel implementations
     else if (pass == 1) {
         switch (hwDecodeCfg->device_type) {
-#ifdef HAVE_CUDA
         case AV_HWDEVICE_TYPE_CUDA:
             // CUDA should only be used if all other options fail, since it requires
             // read-back of frames. This should only be used for the NVIDIA+Wayland case
             // with VDPAU covering the NVIDIA+X11 scenario.
             return new CUDARenderer();
-#endif
         default:
             return nullptr;
         }
@@ -664,6 +663,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                      params->videoFormat);
         return false;
     }
+
     // Look for a hardware decoder first unless software-only
     if (params->vds != StreamingPreferences::VDS_FORCE_SOFTWARE) {
         // Look for the first matching hwaccel hardware decoder (pass 0)
@@ -680,6 +680,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 return true;
             }
         }
+
         // Continue with special non-hwaccel hardware decoders
 
 #ifdef HAVE_MMAL

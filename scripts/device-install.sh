@@ -7,7 +7,7 @@ if [ -z $CMAKE_SOURCE_DIR ]; then
   exit 1
 fi
 
-APP_META_DIR=$CMAKE_SOURCE_DIR/webos-metadata
+APP_META_DIR=$CMAKE_SOURCE_DIR/app/deploy/webos
 
 PKG_NAME=$(jq -r .id ${APP_META_DIR}/appinfo.json)
 PKG_VERSION=$(jq -r .version ${APP_META_DIR}/appinfo.json)

@@ -280,6 +280,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
                         "Selected read-back format: %d",
                         m_SwPixelFormat);
         }
+
         swFrame = av_frame_alloc();
         if (swFrame == nullptr) {
             return;
@@ -304,6 +305,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
 
         frame = swFrame;
     }
+
     if (m_Texture == nullptr) {
         Uint32 sdlFormat;
 

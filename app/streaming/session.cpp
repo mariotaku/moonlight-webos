@@ -15,10 +15,6 @@
 #include "video/slvid.h"
 #endif
 
-#ifdef HAVE_WEBOS
-#include "video/webos.h"
-#endif
-
 #ifdef Q_OS_WIN32
 // Scaling the icon down on Win32 looks dreadful, so render at lower res
 #define ICON_SIZE 32
@@ -227,22 +223,7 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     }
 #endif
 
-#ifdef HAVE_WEBOS
-    chosenDecoder = new WebOSVideoDecoder(testOnly);
-    if (chosenDecoder->initialize(&params)) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "webOS system video decoder chosen");
-        return true;
-    }
-    else {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Unable to load webOS decoder");
-        delete chosenDecoder;
-        chosenDecoder = nullptr;
-    }
-#endif
-
-#if !defined(HAVE_FFMPEG) && !defined(HAVE_SLVIDEO) && !defined(HAVE_WEBOS)
+#if !defined(HAVE_FFMPEG) && !defined(HAVE_SLVIDEO)
 #error No video decoding libraries available!
 #endif
 
@@ -388,10 +369,12 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
 {
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 11, 0)
 Session::Session(QObject *parent)
 {
     qCritical() << "It has been created via QML and that's an error";
 }
+#endif
 
 // NB: This may not get destroyed for a long time! Don't put any vital cleanup here.
 // Use Session::exec() or DeferredSessionCleanupTask instead.
@@ -737,6 +720,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
 
     return true;
 }
+
 
 class DeferredSessionCleanupTask : public QRunnable
 {
@@ -1198,7 +1182,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     m_InputHandler->setWindow(m_Window);
 
 #ifndef Q_OS_WEBOS
-    // webOS doesn't support SVG rendering
+    // webOS 4.x doesn't support SVG rendering
     QSvgRenderer svgIconRenderer(QString(":/res/moonlight.svg"));
     QImage svgImage(ICON_SIZE, ICON_SIZE, QImage::Format_RGBA8888);
     svgImage.fill(0);
@@ -1303,7 +1287,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
         // blocks this thread too long for high polling rate mice and high
         // refresh rate displays.
         if (!SDL_PollEvent(&event)) {
-#ifndef STEAM_LINK
+#if !defined(STEAM_LINK) && !defined(Q_OS_WEBOS)
             SDL_Delay(1);
 #else
             // Waking every 1 ms to process input is too much for the low performance
