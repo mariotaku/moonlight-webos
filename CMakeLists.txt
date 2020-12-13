@@ -24,9 +24,10 @@ add_subdirectory(ffmpeg-prebuilt)
 
 # the `pkg_check_modules` function is created with this call
 find_package(PkgConfig REQUIRED) 
-pkg_check_modules(SDL2 REQUIRED sdl2)
-pkg_check_modules(SDL2TTF REQUIRED SDL2_ttf)
+pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_ttf)
 pkg_check_modules(OPENSSL REQUIRED openssl)
+pkg_check_modules(WAYLAND wayland-client)
+pkg_check_modules(EGL egl glesv2)
 
 # these calls create special `PkgConfig::<MODULE>` variables
 find_package(Qt5 COMPONENTS Core Multimedia Quick REQUIRED)
@@ -88,7 +89,12 @@ set(FFMPEG_SRC
     "app/streaming/video/ffmpeg-renderers/pacer/nullthreadedvsyncsource.cpp"
 )
 
-add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${QRC_SRC} ${FFMPEG_SRC})
+set(EGL_SRC
+    "app/streaming/video/ffmpeg-renderers/eglvid.cpp"
+    "app/streaming/video/ffmpeg-renderers/egl_extensions.cpp"
+)
+
+add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${QRC_SRC} ${FFMPEG_SRC} ${EGL_SRC})
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
     CXX_STANDARD          11
@@ -105,11 +111,17 @@ target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<C
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_FFMPEG)
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE VERSION_STR="0.0.1")
 
+if(WAYLAND_FOUND)
+    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAS_WAYLAND)
+endif(WAYLAND_FOUND)
+if (EGL_FOUND)
+    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_EGL)
+endif(EGL_FOUND)
+
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE
 Threads::Threads pthread
  Qt5::Core Qt5::Multimedia Qt5::Quick Qt5::Network # QT libraries
- ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARIES} # SDL libraries
- ${OPENSSL_LIBRARIES}
+ ${SDL2_LIBRARIES} ${OPENSSL_LIBRARIES} ${WAYLAND_LIBRARIES} ${EGL_LIBRARIES}
  moonlight-common-c qmdnsengine opus
  h264bitstream libavcodec libavutil
 )
