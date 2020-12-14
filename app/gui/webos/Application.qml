@@ -47,7 +47,7 @@ WebOSWindow {
         Header {
             id: pageHeader
             Layout.fillWidth: true
-            headerText: "Moonlight"
+            headerText: window.title
 
             RowLayout {   
                 anchors {
@@ -59,18 +59,16 @@ WebOSWindow {
 
                 Button {
                     id: addDevice
-                    text: "Add device"
-                    // shortcut: WebOS.Key_webOS_Blue
+                    iconSource: "qrc:/res/webos/add-device.png"
                 }
                 Button {
-                    id: help
-                    text: "Help"
-                    // shortcut: WebOS.Key_webOS_Green
+                    id: showHelp
+                    iconSource: "qrc:/res/webos/help.png"
                 }
                 Button {
                     id: settings
-                    text: "Settings"
-                    // shortcut: WebOS.Key_webOS_Yellow
+                    iconSource: "qrc:/res/webos/settings.png"
+                    onClicked: navigateTo("qrc:/gui/webos/SettingsView.qml", qsTr("Settings"))
                 }
             }
         }
@@ -85,14 +83,30 @@ WebOSWindow {
             onCurrentItemChanged: {
                 // Ensure focus travels to the next view when going back
                 if (currentItem) {
-                    currentItem.forceActiveFocus()
+                    currentItem.forceActiveFocus();
+                    pageHeader.headerText = currentItem.objectName || window.title;
                 }
             }
         }
         
         Keys.onPressed: {
-            if (event.key == WebOS.Key_webOS_Back) {
-                window.navigateUp()
+            switch (event.key) {
+                case WebOS.Key_webOS_Back: {
+                    window.navigateUp();
+                    break;
+                }
+                case WebOS.Key_webOS_Blue: {
+                    addDevice.clicked(null);
+                    break;
+                }
+                case WebOS.Key_webOS_Green: {
+                    showHelp.clicked(null);
+                    break;
+                }
+                case WebOS.Key_webOS_Yellow: {
+                    settings.clicked(null);
+                    break;
+                }
             }
         }
 

@@ -28,6 +28,7 @@ pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_ttf)
 pkg_check_modules(OPENSSL REQUIRED openssl)
 pkg_check_modules(WAYLAND wayland-client)
 pkg_check_modules(EGL egl glesv2)
+pkg_check_modules(GST gstreamer-1.0 gstreamer-base-1.0 gstreamer-app-1.0)
 
 # these calls create special `PkgConfig::<MODULE>` variables
 find_package(Qt5 COMPONENTS Core Multimedia Quick REQUIRED)
@@ -73,8 +74,8 @@ set(BASE_SRC
 )
 
 set(QRC_SRC
-    "app/qml.qrc"
-    "app/resources.qrc"
+    "app/qml-webos.qrc"
+    "app/resources-webos.qrc"
 )
 
 set(WEBOS_SRC
@@ -94,7 +95,7 @@ set(EGL_SRC
     "app/streaming/video/ffmpeg-renderers/egl_extensions.cpp"
 )
 
-add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${QRC_SRC} ${FFMPEG_SRC} ${EGL_SRC})
+add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${QRC_SRC} ${FFMPEG_SRC} ${EGL_SRC} ${WEBOS_SRC})
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
     CXX_STANDARD          11
@@ -118,10 +119,14 @@ if (EGL_FOUND)
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_EGL)
 endif(EGL_FOUND)
 
+if (GST_FOUND)
+    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_GST)
+endif(GST_FOUND)
+
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE
 Threads::Threads pthread
  Qt5::Core Qt5::Multimedia Qt5::Quick Qt5::Network # QT libraries
- ${SDL2_LIBRARIES} ${OPENSSL_LIBRARIES} ${WAYLAND_LIBRARIES} ${EGL_LIBRARIES}
+ ${SDL2_LIBRARIES} ${OPENSSL_LIBRARIES} ${WAYLAND_LIBRARIES} ${EGL_LIBRARIES} ${GST_LIBRARIES}
  moonlight-common-c qmdnsengine opus
  h264bitstream libavcodec libavutil
 )

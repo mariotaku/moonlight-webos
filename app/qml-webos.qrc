@@ -1,0 +1,15 @@
+<RCC>
+    <!-- Update with `find app/ -name '*.qml' -printf '        <file>%P</file>\n'` -->
+    <qresource prefix="/">
+        <file alias="gui/main.qml">gui/webos/Application.qml</file>
+        <file>gui/webos/PcView.qml</file>
+        <file>gui/webos/AppView.qml</file>
+        <file>gui/webos/SettingsView.qml</file>
+        <file>gui/webos/StreamSegue.qml</file>
+        <file>gui/webos/CenteredGridView.qml</file>
+        <file>gui/webos/NavigableItemDelegate.qml</file>
+        <file>gui/webos/NavigableMenuItem.qml</file>
+        <file>gui/webos/NavigableMenu.qml</file>
+        <file>gui/webos/NavigableDialog.qml</file>
+    </qresource>
+</RCC>

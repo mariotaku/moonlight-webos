@@ -149,4 +149,6 @@ GridView {
             }
         }
     }
+    
+    highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
 }

@@ -102,7 +102,7 @@ GridView {
         Image {
             id: pcIcon
             anchors.horizontalCenter: parent.horizontalCenter
-            source: "qrc:/res/desktop_windows-256px.png"
+            source: "qrc:/res/webos/desktop_windows-256px.png"
             sourceSize {
                 width: 200
                 height: 200
@@ -116,7 +116,7 @@ GridView {
             anchors.verticalCenter: pcIcon.verticalCenter
             anchors.verticalCenterOffset: -15
             visible: !model.statusUnknown && (!model.online || !model.paired)
-            source: !model.online ? "qrc:/res/baseline-warning-96px.png" : "qrc:/res/baseline-lock-96px.png"
+            source: !model.online ? "qrc:/res/webos/baseline-warning-96px.png" : "qrc:/res/webos/baseline-lock-96px.png"
             sourceSize {
                 width: 75
                 height: 75
@@ -239,6 +239,8 @@ GridView {
         }
     }
         
+    highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
+
     MessageDialog {
         id: errorDialog
 

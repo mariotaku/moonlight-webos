@@ -15,6 +15,10 @@
 #include "video/slvid.h"
 #endif
 
+#ifdef HAVE_GST
+#include "video/webos.h"
+#endif
+
 #ifdef Q_OS_WIN32
 // Scaling the icon down on Win32 looks dreadful, so render at lower res
 #define ICON_SIZE 32
@@ -208,6 +212,21 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     }
 #endif
 
+#ifdef HAVE_GST
+    chosenDecoder = new WebOSVideoDecoder(testOnly);
+    if (chosenDecoder->initialize(&params)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "GStreamer-based video decoder chosen");
+        return true;
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to load GStreamer decoder");
+        delete chosenDecoder;
+        chosenDecoder = nullptr;
+    }
+#endif
+
 #ifdef HAVE_FFMPEG
     chosenDecoder = new FFmpegVideoDecoder(testOnly);
     if (chosenDecoder->initialize(&params)) {
@@ -223,7 +242,7 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     }
 #endif
 
-#if !defined(HAVE_FFMPEG) && !defined(HAVE_SLVIDEO)
+#if !defined(HAVE_FFMPEG) && !defined(HAVE_SLVIDEO) && !defined(HAVE_GST)
 #error No video decoding libraries available!
 #endif
 

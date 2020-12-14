@@ -26,6 +26,10 @@
 #include "streaming/video/ffmpeg.h"
 #endif
 
+#ifdef HAVE_GST
+#include <gst/gst.h>
+#endif
+
 #if defined(Q_OS_WIN32) && defined(Q_PROCESSOR_X86)
 #include "antihookingprotection.h"
 #elif defined(Q_OS_LINUX)
@@ -241,6 +245,9 @@ LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
 int main(int argc, char *argv[])
 {
+#ifdef HAVE_GST
+    gst_init (&argc, &argv);
+#endif
     SDL_SetMainReady();
 
     // Set the app version for the QCommandLineParser's showVersion() command
@@ -582,7 +589,7 @@ int main(int argc, char *argv[])
         }
     }
 #else
-    initialView = "qrc:/gui/PcView.qml";
+    initialView = "qrc:/gui/webos/PcView.qml";
 #endif
 
     engine.rootContext()->setContextProperty("initialView", initialView);

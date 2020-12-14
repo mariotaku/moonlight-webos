@@ -19,5 +19,9 @@ DEVICE=hometv-nopass
 ssh $DEVICE << EOF
 killall ${EXE_NAME}
 export APPID=${PKG_NAME}
-apps/usr/palm/applications/${PKG_NAME}/${EXE_NAME} $@
+cd apps/usr/palm/applications/${PKG_NAME}/
+if [ -d assets/debug.env ]; then
+  . assets/debug.env
+fi
+./${EXE_NAME} $@
 EOF
