@@ -35,7 +35,8 @@ bool WebOSVideoDecoder::initialize(PDECODER_PARAMETERS params)
 
     GstElement *pipeline, *source, *sink;
     /* Create the elements */
-    pipeline = gst_parse_launch("appsrc name=src ! h264parse ! lxvideodec ! lxvideosink name=sink", NULL);
+    // pipeline = gst_parse_launch("appsrc name=src ! h264parse ! lxvideodec ! lxvideosink name=sink", NULL);
+    pipeline = gst_parse_launch("appsrc name=src ! h264parse ! lxvideodec ! appsink name=sink emit-signals=true", NULL);
     source = gst_bin_get_by_name(GST_BIN(pipeline), "src");
     sink = gst_bin_get_by_name(GST_BIN(pipeline), "sink");
 
@@ -44,14 +45,10 @@ bool WebOSVideoDecoder::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    GstCaps *srccaps;
-    srccaps = gst_caps_new_simple("video/x-h264", NULL);
-    gst_base_src_set_caps(GST_BASE_SRC(source), srccaps);
-
-    // g_signal_connect(sink, "new-preroll", G_CALLBACK(gstSinkNewPreroll), this);
-    // g_signal_connect(sink, "new-sample", G_CALLBACK(gstSinkNewSample), this);
-
-    gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    if (strcmp("GstAppSink", g_type_name(G_OBJECT_TYPE(sink))) == 0) {
+        g_signal_connect(sink, "new-preroll", G_CALLBACK(gstSinkNewPreroll), this);
+        g_signal_connect(sink, "new-sample", G_CALLBACK(gstSinkNewSample), this);
+    }
 
     m_Source = source;
     m_Sink = sink;
@@ -119,7 +116,7 @@ bool WebOSVideoDecoder::initialize(PDECODER_PARAMETERS params)
 
 bool WebOSVideoDecoder::isHardwareAccelerated() 
 {
-    return false;
+    return true;
 }
 
 bool WebOSVideoDecoder::isAlwaysFullScreen() 
@@ -197,8 +194,6 @@ void WebOSVideoDecoder::renderFrameOnMainThread()
     SDL_RenderPresent(m_Renderer);
 }
 
-static int num_frames = 0;
-
 GstFlowReturn WebOSVideoDecoder::gstSinkNewPreroll(GstElement *sink, gpointer self)
 {
     GstSample *sample;
@@ -210,9 +205,6 @@ GstFlowReturn WebOSVideoDecoder::gstSinkNewPreroll(GstElement *sink, gpointer se
     if (gst_buffer_get_size(buf) == sizeof(LXDEBuffer)) {
         LXDEBuffer lxbuf;
         gst_buffer_extract(buf, 0, &lxbuf, sizeof(LXDEBuffer));
-
-        num_frames = 0;
-
         qDebug("LXDEBuffer(width=%d, height=%d, addr_y=%lx, addr_c=%lx)", lxbuf.width, lxbuf.height, lxbuf.addr_y, lxbuf.addr_c);
     }
     /* Free the sample now that we are done with it */
@@ -229,16 +221,8 @@ GstFlowReturn WebOSVideoDecoder::gstSinkNewSample(GstElement *sink, gpointer sel
     if (gst_buffer_get_size(buf) == sizeof(LXDEBuffer)) {
         LXDEBuffer lxbuf;
         gst_buffer_extract(buf, 0, &lxbuf, sizeof(LXDEBuffer));
-
-        if (num_frames == 300)
-        {
-            std::fstream myFile("/media/developer/temp/preroll.luma",std::ios::out | std::ios::binary);
-            myFile.write((char*)lxbuf.element, lxbuf.width * lxbuf.height);
-            myFile.flush();
-            myFile.close();
-        }
-
-        num_frames++;
+    } else {
+        qDebug("Sample size %d", gst_buffer_get_size(buf));
     }
     /* Free the sample now that we are done with it */
     gst_sample_unref(sample);

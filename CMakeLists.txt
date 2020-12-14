@@ -4,7 +4,8 @@ cmake_minimum_required(VERSION 3.1)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 
 # Add folder where are supportive functions
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/webos)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Include webOS SDK related functions
@@ -19,8 +20,6 @@ option(BUILD_SHARED_LIBS "Build static libs instead of shared" OFF)
 add_subdirectory(moonlight-common-c)
 add_subdirectory(qmdnsengine)
 add_subdirectory(opus)
-add_subdirectory(h264bitstream)
-add_subdirectory(ffmpeg-prebuilt)
 
 # the `pkg_check_modules` function is created with this call
 find_package(PkgConfig REQUIRED) 
@@ -28,6 +27,7 @@ pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_ttf)
 pkg_check_modules(OPENSSL REQUIRED openssl)
 pkg_check_modules(WAYLAND wayland-client)
 pkg_check_modules(EGL egl glesv2)
+pkg_check_modules(FFMPEG libavcodec>=58 libavutil>=56)
 pkg_check_modules(GST gstreamer-1.0 gstreamer-base-1.0 gstreamer-app-1.0)
 
 # these calls create special `PkgConfig::<MODULE>` variables
@@ -95,7 +95,7 @@ set(EGL_SRC
     "app/streaming/video/ffmpeg-renderers/egl_extensions.cpp"
 )
 
-add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${QRC_SRC} ${FFMPEG_SRC} ${EGL_SRC} ${WEBOS_SRC})
+add_executable(${EXECUTABLE_NAME} ${BASE_SRC} ${QRC_SRC})
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
     CXX_STANDARD          11
@@ -109,27 +109,38 @@ target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS
 target_include_directories(${EXECUTABLE_NAME} SYSTEM PRIVATE ${GST_INCLUDE_DIRS})
 
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_FFMPEG)
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE VERSION_STR="0.0.1")
+
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE
+    Qt5::Core Qt5::Multimedia Qt5::Quick Qt5::Network # QT libraries
+    ${SDL2_LIBRARIES} ${OPENSSL_LIBRARIES}
+    moonlight-common-c qmdnsengine opus pthread
+)
 
 if(WAYLAND_FOUND)
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAS_WAYLAND)
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${WAYLAND_LIBRARIES})
 endif(WAYLAND_FOUND)
-if (EGL_FOUND)
-    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_EGL)
-endif(EGL_FOUND)
+
+if (FFMPEG_FOUND)
+    add_subdirectory(h264bitstream)
+    target_sources(${EXECUTABLE_NAME} PRIVATE ${FFMPEG_SRC})
+    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_FFMPEG)
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE h264bitstream ${FFMPEG_LIBRARIES})
+
+    if (EGL_FOUND)
+        target_sources(${EXECUTABLE_NAME} PRIVATE ${EGL_SRC})
+        target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_EGL)
+        target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${EGL_LIBRARIES})
+    endif(EGL_FOUND)
+
+endif(FFMPEG_FOUND)
 
 if (GST_FOUND)
+    target_sources(${EXECUTABLE_NAME} PRIVATE ${WEBOS_SRC})
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAVE_GST)
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${GST_LIBRARIES})
 endif(GST_FOUND)
-
-target_link_libraries(${EXECUTABLE_NAME} PRIVATE
-Threads::Threads pthread
- Qt5::Core Qt5::Multimedia Qt5::Quick Qt5::Network # QT libraries
- ${SDL2_LIBRARIES} ${OPENSSL_LIBRARIES} ${WAYLAND_LIBRARIES} ${EGL_LIBRARIES} ${GST_LIBRARIES}
- moonlight-common-c qmdnsengine opus
- h264bitstream libavcodec libavutil
-)
 
 add_custom_target("webos-package" COMMAND ${CMAKE_SOURCE_DIR}/scripts/build-webos-ipk.sh ${CMAKE_SOURCE_DIR}
     DEPENDS ${EXECUTABLE_NAME}
