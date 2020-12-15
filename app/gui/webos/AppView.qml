@@ -3,6 +3,10 @@ import QtQuick.Controls 1.4
 import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.1
 
+import WebOS.Global 1.0
+import Eos.Window 0.1
+import Eos.Controls 0.1
+
 import AppModel 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
@@ -113,6 +117,22 @@ GridView {
             // ToolTip.timeout: 5000
             // ToolTip.visible: (parent.hovered || parent.highlighted) && (!appNameText.visible || appNameText.truncated)
         }
+
+        Column {
+            anchors.centerIn: appIcon
+            visible: model.running
+
+            Button {
+                text: "Resume Game"
+                onClicked: launchOrResumeSelectedApp(true)
+            }
+
+            Button {
+                text: "Quit Game"
+
+                onClicked: doQuitGame()
+            }
+        }
         
         function launchOrResumeSelectedApp(quitExistingApp)
         {
@@ -148,6 +168,13 @@ GridView {
                 launchOrResumeSelectedApp(true)
             }
         }
+        
+        function doQuitGame() {
+            quitAppDialog.appName = appModel.getRunningAppName()
+            quitAppDialog.segueToStream = false
+            quitAppDialog.open()
+        }
+
     }
     
     highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
