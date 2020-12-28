@@ -1,3 +1,13 @@
+### Build IPK
+
+1. To start, you'll need to have webOS SDK, and NDK installed. Instead of bloated version from LG Developers, 
+you can check out [SDK from webOS OSE](https://www.webosose.org/docs/tools/sdk/sdk-download/).
+Environment variable `WEBOS_CLI_TV` should also be set.
+For NDK, please check out [this tutorial](https://github.com/webosbrew/meta-lg-webos-ndk).
+2. Check out this repo, follow standard CMake build procedure to configure the project.
+3. Use `make webos-package` to make IPK package.
+
+
 ### Build FFMPEG
 
 ```
