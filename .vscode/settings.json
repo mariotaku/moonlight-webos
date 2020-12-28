@@ -69,6 +69,7 @@
         "future": "cpp",
         "mutex": "cpp",
         "variant": "cpp",
-        "qobject": "cpp"
+        "qobject": "cpp",
+        "qtendian": "cpp"
     },
 }

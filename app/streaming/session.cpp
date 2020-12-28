@@ -28,6 +28,7 @@
 
 #include <openssl/rand.h>
 
+#include <QtCore>
 #include <QtEndian>
 #include <QCoreApplication>
 #include <QThreadPool>
