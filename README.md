@@ -1,3 +1,6 @@
+### 
+Deprecated. Further developent will start in another repo soon.
+
 ### Build IPK
 
 1. To start, you'll need to have webOS SDK, and NDK installed. Instead of bloated version from LG Developers, 
