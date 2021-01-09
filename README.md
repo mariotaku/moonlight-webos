@@ -1,5 +1,4 @@
-### 
-Deprecated. Further developent will start in another repo soon.
+# Deprecated. Check out [moonlight-tv](https://github.com/mariotaku/moonlight-tv)
 
 ### Build IPK
 
